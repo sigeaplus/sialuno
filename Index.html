@@ -1,0 +1,1890 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<link rel="icon" href="sialuno_logo.png">
+</head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0F172A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SIALUNO">
+<link rel="apple-touch-icon" href="sialuno_logo.png">
+<link rel="icon" type="image/png" href="sialuno_logo.png">
+<link rel="manifest" href="manifest.json">
+<title>SIALUNO — Portal do Aluno</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F0F4FF;
+  --surface:#FFFFFF;
+  --surface2:#F8FAFF;
+  --primary:#2563EB;
+  --primary-dark:#1D4ED8;
+  --primary-light:#EFF6FF;
+  --accent:#F59E0B;
+  --success:#10B981;
+  --danger:#EF4444;
+  --warning:#F59E0B;
+  --ink:#0F172A;
+  --ink2:#334155;
+  --muted:#94A3B8;
+  --border:#E2E8F0;
+  --bnav-h:68px;
+  --header-h:64px;
+  --radius:14px;
+  --radius-sm:10px;
+  --shadow:0 4px 24px rgba(15,23,42,0.08);
+  --shadow-lg:0 12px 40px rgba(15,23,42,0.14);
+}
+
+html{scroll-behavior:smooth}
+body{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  min-height:100vh;
+  overflow-x:hidden;
+  padding-bottom:calc(var(--bnav-h) + env(safe-area-inset-bottom));
+}
+
+/* ===== LOADING ===== */
+#loadingOverlay{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(135deg,#1E3A8A,#0F172A);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+}
+.load-logo{font-size:32px;font-weight:800;color:#fff;letter-spacing:-0.03em}
+.load-logo span{color:#60A5FA}
+.load-bar{width:160px;height:3px;background:rgba(255,255,255,0.15);border-radius:10px;overflow:hidden}
+.load-bar-inner{height:100%;width:0%;background:linear-gradient(90deg,#3B82F6,#60A5FA);border-radius:10px;animation:loadbar 1.8s ease-out forwards}
+@keyframes loadbar{to{width:100%}}
+.load-text{font-size:13px;color:rgba(255,255,255,0.5);font-weight:500}
+
+/* ===== HEADER ===== */
+#header{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  height:var(--header-h);
+  background:linear-gradient(135deg,#1E3A8A 0%,#2563EB 100%);
+  display:flex;align-items:center;padding:0 18px;gap:14px;
+  box-shadow:0 4px 20px rgba(37,99,235,0.35);
+}
+.header-avatar{
+  width:38px;height:38px;border-radius:10px;
+  background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:800;color:#fff;flex-shrink:0;cursor:pointer;
+  transition:all .2s;
+}
+.header-avatar:hover{background:rgba(255,255,255,0.3)}
+.header-info{flex:1;overflow:hidden}
+.header-nome{font-size:14px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header-turma{font-size:11px;color:rgba(255,255,255,0.65);font-weight:500}
+.header-notif{
+  width:36px;height:36px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.25);
+  background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:15px;cursor:pointer;transition:all .2s;position:relative;
+}
+.header-notif:hover{background:rgba(255,255,255,0.2)}
+.notif-badge{
+  position:absolute;top:-4px;right:-4px;width:16px;height:16px;
+  background:#EF4444;border-radius:50%;border:2px solid #2563EB;
+  font-size:9px;font-weight:800;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ===== CONTENT ===== */
+#content{
+  margin-top:var(--header-h);
+  padding:20px 16px 24px;
+  max-width:680px;margin-left:auto;margin-right:auto;
+}
+
+/* ===== PAGES ===== */
+.page{display:none}
+.page.active{display:block;animation:fadeUp .3s ease-out}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== BOTTOM NAV ===== */
+#bottomNav{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  height:var(--bnav-h);
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  display:flex;align-items:stretch;
+  padding-bottom:env(safe-area-inset-bottom);
+  box-shadow:0 -4px 20px rgba(15,23,42,0.08);
+}
+.bnav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  color:var(--muted);cursor:pointer;border:none;background:none;
+  font-size:10px;font-weight:700;letter-spacing:0.02em;
+  transition:all .2s;padding:8px 4px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+.bnav-item i{font-size:20px;transition:all .25s}
+.bnav-item.active{color:var(--primary)}
+.bnav-item.active i{transform:translateY(-2px)}
+.bnav-item:active{background:var(--bg)}
+
+/* ===== PERFIL CARD ===== */
+.perfil-hero{
+  background:linear-gradient(135deg,#1E3A8A,#2563EB);
+  border-radius:var(--radius);padding:24px;margin-bottom:16px;
+  color:#fff;position:relative;overflow:hidden;
+}
+.perfil-hero::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:160px;height:160px;border-radius:50%;
+  background:rgba(255,255,255,0.06);
+}
+.perfil-hero::after{
+  content:'';position:absolute;bottom:-60px;left:-20px;
+  width:200px;height:200px;border-radius:50%;
+  background:rgba(255,255,255,0.04);
+}
+.perfil-avatar{
+  width:64px;height:64px;border-radius:16px;
+  background:rgba(255,255,255,0.2);border:3px solid rgba(255,255,255,0.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;font-weight:800;color:#fff;
+  margin-bottom:14px;position:relative;z-index:1;
+}
+.perfil-nome{font-size:20px;font-weight:800;margin-bottom:4px;position:relative;z-index:1;letter-spacing:-0.02em}
+.perfil-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;position:relative;z-index:1}
+.perfil-chip{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);
+  border-radius:20px;padding:5px 12px;
+  font-size:12px;font-weight:600;color:#fff;
+}
+.perfil-chip i{font-size:11px;opacity:0.8}
+
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.info-card{
+  background:var(--surface);border-radius:var(--radius-sm);padding:16px;
+  border:1px solid var(--border);
+}
+.info-card-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px}
+.info-card-value{font-size:15px;font-weight:700;color:var(--ink)}
+.info-card-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ===== COMUNICADOS ===== */
+.page-header{margin-bottom:18px}
+.page-header h2{font-size:20px;font-weight:800;color:var(--ink);letter-spacing:-0.02em}
+.page-header p{font-size:13px;color:var(--muted);margin-top:3px}
+
+.comunicado-card{
+  background:var(--surface);border-radius:var(--radius);
+  border:1px solid var(--border);padding:18px;margin-bottom:12px;
+  cursor:pointer;transition:all .2s;position:relative;overflow:hidden;
+}
+.comunicado-card:hover{border-color:var(--primary);box-shadow:var(--shadow)}
+.comunicado-card.unread::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;
+  width:3px;background:var(--primary);border-radius:3px 0 0 3px;
+}
+.comunicado-card.unread{background:#FAFCFF}
+.com-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:8px}
+.com-icon{
+  width:36px;height:36px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+}
+.com-icon.escola{background:#EFF6FF;color:var(--primary)}
+.com-icon.turma{background:#ECFDF5;color:var(--success)}
+.com-icon.individual{background:#FFFBEB;color:var(--accent)}
+.com-title{font-size:14px;font-weight:700;color:var(--ink);flex:1;line-height:1.3}
+.com-date{font-size:11px;color:var(--muted);white-space:nowrap}
+.com-preview{font-size:13px;color:var(--ink2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.com-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;
+  margin-top:10px;
+}
+.com-tag.escola{background:#EFF6FF;color:var(--primary)}
+.com-tag.turma{background:#ECFDF5;color:var(--success)}
+.com-tag.individual{background:#FFFBEB;color:#D97706}
+
+.empty-state{
+  text-align:center;padding:52px 24px;color:var(--muted);
+}
+.empty-state i{font-size:42px;margin-bottom:14px;color:var(--border);display:block}
+.empty-state p{font-size:14px;font-weight:600}
+.empty-state span{font-size:13px;display:block;margin-top:4px;opacity:0.7}
+
+/* ===== FREQUÊNCIA — RESUMO CARDS ===== */
+.freq-resumo{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;
+}
+.freq-resumo-card{
+  background:var(--surface);border-radius:var(--radius-sm);border:1px solid var(--border);
+  padding:16px 12px;text-align:center;
+}
+.freq-resumo-val{font-size:26px;font-weight:800;line-height:1;margin-bottom:5px}
+.freq-resumo-val.green{color:#10B981}
+.freq-resumo-val.red{color:#EF4444}
+.freq-resumo-val.blue{color:var(--primary)}
+.freq-resumo-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em}
+
+/* ===== CALENDÁRIO ===== */
+.cal-card{
+  background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);
+  padding:18px 16px 16px;margin-bottom:16px;
+}
+.cal-nav{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;
+}
+.cal-nav-btn{
+  width:32px;height:32px;border-radius:8px;border:1px solid var(--border);
+  background:var(--bg);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--ink2);font-size:12px;transition:all .2s;
+}
+.cal-nav-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+.cal-month{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-0.01em}
+
+.cal-grid{
+  display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px;
+}
+.cal-dow{
+  text-align:center;font-size:11px;font-weight:700;color:var(--muted);
+  padding:4px 0;text-transform:uppercase;letter-spacing:0.04em;
+}
+.cal-day{
+  aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer;
+  transition:all .2s;position:relative;border:2px solid transparent;
+}
+.cal-day.empty{background:none;pointer-events:none;cursor:default}
+.cal-day:not(.empty):hover{background:var(--primary-light);color:var(--primary)}
+
+/* VERDE: presente */
+.cal-day.presente{
+  background:#DCFCE7;color:#166534;border-color:#86EFAC;font-weight:700;
+}
+.cal-day.presente::after{
+  content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:#16A34A;
+}
+
+/* VERMELHO: falta */
+.cal-day.falta{
+  background:#FEE2E2;color:#991B1B;border-color:#FCA5A5;font-weight:700;
+}
+.cal-day.falta::after{
+  content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:#DC2626;
+}
+
+/* CINZA: aguardando lançamento */
+.cal-day.aguardando{
+  background:#F1F5F9;color:#64748B;border-color:#CBD5E1;
+}
+
+/* Dia de hoje — borda destacada */
+.cal-day.hoje{
+  box-shadow:0 0 0 2px var(--primary);
+}
+.cal-day.hoje:not(.presente):not(.falta):not(.aguardando){
+  background:var(--primary-light);color:var(--primary);font-weight:700;
+}
+
+/* Dia selecionado */
+.cal-day.selected{
+  box-shadow:0 0 0 2.5px var(--primary),0 2px 8px rgba(37,99,235,0.25);
+  z-index:1;
+}
+
+/* Legenda */
+.cal-legend{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;
+  padding-top:12px;border-top:1px solid var(--border);
+}
+.cal-legend-item{
+  display:flex;align-items:center;gap:7px;
+  font-size:11px;font-weight:600;color:var(--ink2);
+}
+.cal-legend-dot{
+  width:14px;height:14px;border-radius:50%;flex-shrink:0;border:2px solid transparent;
+}
+.cal-legend-dot.presente{background:#DCFCE7;border-color:#86EFAC}
+.cal-legend-dot.falta{background:#FEE2E2;border-color:#FCA5A5}
+.cal-legend-dot.aguardando{background:#F1F5F9;border-color:#CBD5E1}
+.cal-legend-dot.hoje{background:var(--primary-light);border-color:var(--primary)}
+
+/* ===== DETALHE DO DIA ===== */
+.cal-detail{
+  background:var(--surface);border-radius:var(--radius-sm);border:1px solid var(--border);
+  overflow:hidden;margin-bottom:10px;
+}
+.cal-detail-header{
+  padding:12px 16px;background:var(--bg);border-bottom:1px solid var(--border);
+}
+.cal-detail-date{font-size:13px;font-weight:700;color:var(--ink)}
+
+.disc-row{
+  display:flex;align-items:center;gap:10px;padding:13px 16px;
+  border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;
+}
+.disc-row:last-of-type{border-bottom:none}
+.disc-row:hover{background:var(--bg)}
+.disc-status-dot{
+  width:10px;height:10px;border-radius:50%;flex-shrink:0;
+}
+.disc-status-dot.presente{background:#16A34A}
+.disc-status-dot.falta{background:#DC2626}
+.disc-status-dot.aguardando{background:#94A3B8}
+.disc-row-info{flex:1}
+.disc-row-nome{font-size:13px;font-weight:700;color:var(--ink)}
+.disc-row-prof{font-size:11px;color:var(--muted);margin-top:1px}
+.disc-row-status{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
+.disc-row-status.presente{background:#DCFCE7;color:#166534}
+.disc-row-status.falta{background:#FEE2E2;color:#991B1B}
+.disc-row-status.aguardando{background:#F1F5F9;color:#64748B}
+.disc-row-chevron{font-size:11px;color:var(--muted)}
+
+.aula-detail{
+  padding:12px 16px;background:var(--bg);border-top:1px solid var(--border);
+}
+.aula-detail-title{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:5px}
+.aula-detail-desc{font-size:13px;color:var(--ink2);line-height:1.6}
+.btn-acessar-disc{
+  display:inline-flex;align-items:center;gap:7px;margin-top:12px;
+  background:none;border:none;padding:0;cursor:pointer;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:12px;font-weight:800;color:var(--primary);
+  letter-spacing:0.04em;text-transform:uppercase;
+  transition:opacity .2s;
+}
+.btn-acessar-disc:hover{opacity:0.7}
+.btn-acessar-disc i{font-size:13px}
+
+/* Histórico de faltas (legado) */
+.freq-hist-list{margin-top:10px;display:none}
+.freq-hist-list.open{display:block}
+.falta-row{
+  display:flex;align-items:center;gap:10px;padding:9px 0;
+  border-bottom:1px solid var(--border);font-size:13px;
+}
+.falta-row:last-child{border-bottom:none}
+.falta-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--danger)}
+.falta-data{font-weight:600;color:var(--ink);flex:1}
+.falta-aulas{color:var(--muted)}
+
+/* ===== NOTAS ===== */
+.tri-tabs{display:flex;gap:6px;margin-bottom:18px;background:var(--surface);border-radius:var(--radius-sm);padding:5px;border:1px solid var(--border)}
+.tri-tab{
+  flex:1;padding:9px 4px;text-align:center;font-size:12px;font-weight:700;
+  color:var(--muted);cursor:pointer;border-radius:8px;transition:all .2s;border:none;background:none;
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+.tri-tab.active{background:var(--primary);color:#fff;box-shadow:0 4px 12px rgba(37,99,235,0.3)}
+
+.notas-media-hero{
+  background:linear-gradient(135deg,#1E3A8A,#2563EB);
+  border-radius:var(--radius);padding:20px 22px;margin-bottom:16px;
+  display:flex;align-items:center;gap:16px;
+}
+.notas-media-val{font-size:42px;font-weight:800;color:#fff;line-height:1;letter-spacing:-0.04em}
+.notas-media-info{flex:1}
+.notas-media-lbl{font-size:11px;color:rgba(255,255,255,0.6);font-weight:600;text-transform:uppercase;letter-spacing:0.06em}
+.notas-media-situacao{
+  font-size:13px;font-weight:700;margin-top:6px;
+  padding:4px 12px;border-radius:20px;display:inline-block;
+}
+.situacao-aprovado{background:rgba(16,185,129,0.2);color:#34D399}
+.situacao-atencao{background:rgba(245,158,11,0.2);color:#FBB024}
+.situacao-reprovado{background:rgba(239,68,68,0.2);color:#F87171}
+
+.nota-disc-card{
+  background:var(--surface);border-radius:var(--radius-sm);
+  border:1px solid var(--border);padding:16px;margin-bottom:10px;
+  transition:all .2s;
+}
+.nota-disc-card:hover{border-color:var(--primary);transform:translateX(3px)}
+.nota-disc-header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.nota-disc-icon{
+  width:36px;height:36px;border-radius:9px;
+  background:var(--primary-light);color:var(--primary);
+  display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;
+}
+.nota-disc-name{font-size:14px;font-weight:700;color:var(--ink);flex:1}
+.nota-disc-media{
+  font-size:20px;font-weight:800;
+}
+.nota-disc-media.ap{color:var(--success)}
+.nota-disc-media.at{color:var(--warning)}
+.nota-disc-media.rp{color:var(--danger)}
+.nota-disc-media.nd{color:var(--muted);font-size:14px}
+
+.nota-pesos{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.nota-peso-item{
+  flex:1;min-width:80px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:8px 10px;text-align:center;
+}
+.nota-peso-lbl{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em}
+.nota-peso-val{font-size:16px;font-weight:800;color:var(--ink);margin-top:2px}
+.nota-peso-val.nd{color:var(--muted);font-size:13px}
+
+/* Boletim PDF */
+.btn-boletim{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  background:linear-gradient(135deg,#1E3A8A,#2563EB);
+  color:#fff;border:none;border-radius:var(--radius-sm);
+  padding:14px;width:100%;font-size:14px;font-weight:700;
+  cursor:pointer;margin-top:20px;transition:all .2s;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  box-shadow:0 6px 20px rgba(37,99,235,0.3);
+}
+.btn-boletim:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(37,99,235,0.4)}
+.btn-boletim:active{transform:scale(0.98)}
+.btn-boletim:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+
+/* ===== TURMA ===== */
+.turma-hero{
+  background:var(--surface);border-radius:var(--radius);
+  border:1px solid var(--border);padding:20px;margin-bottom:16px;
+  display:flex;align-items:center;gap:16px;
+}
+.turma-hero-icon{
+  width:56px;height:56px;border-radius:14px;
+  background:var(--primary-light);color:var(--primary);
+  display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;
+}
+.turma-hero-nome{font-size:20px;font-weight:800;color:var(--ink);letter-spacing:-0.02em}
+.turma-hero-info{font-size:12px;color:var(--muted);margin-top:3px}
+
+.turma-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.turma-stat{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:14px;text-align:center;
+}
+.turma-stat-val{font-size:22px;font-weight:800;color:var(--primary)}
+.turma-stat-lbl{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-top:3px}
+
+.aluno-list-item{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:14px 16px;margin-bottom:8px;
+  display:flex;align-items:center;gap:12px;transition:all .2s;
+}
+.aluno-list-item:hover{border-color:var(--primary);background:var(--primary-light)}
+.aluno-num{
+  width:30px;height:30px;border-radius:8px;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:800;color:var(--muted);flex-shrink:0;
+}
+.aluno-av{
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:800;color:#fff;flex-shrink:0;
+}
+.aluno-item-nome{font-size:14px;font-weight:600;color:var(--ink);flex:1}
+.rep-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  background:#FFF7ED;color:#D97706;border:1px solid #FDE68A;
+  padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;
+}
+.eu-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  background:var(--primary-light);color:var(--primary);
+  padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;
+}
+
+/* ===== MODAL COMUNICADO ===== */
+.modal-backdrop{
+  display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(15,23,42,0.6);backdrop-filter:blur(4px);
+  align-items:flex-end;justify-content:center;padding:0;
+}
+.modal-backdrop.open{display:flex;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-sheet{
+  background:var(--surface);border-radius:20px 20px 0 0;width:100%;
+  max-height:80vh;overflow-y:auto;
+  animation:slideUp .3s cubic-bezier(0.34,1.56,0.64,1);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:4px;margin:12px auto 0}
+.modal-sheet-header{padding:16px 20px 0}
+.modal-sheet-title{font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-0.02em;margin-top:10px}
+.modal-sheet-meta{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.modal-sheet-body{padding:16px 20px 28px;font-size:14px;line-height:1.75;color:var(--ink2)}
+
+/* ===== TOAST ===== */
+#toast{
+  position:fixed;bottom:calc(var(--bnav-h) + 12px);left:50%;
+  transform:translateX(-50%);z-index:9998;
+  background:#0F172A;color:#fff;border-radius:10px;
+  padding:11px 20px;font-size:13px;font-weight:600;
+  display:none;align-items:center;gap:8px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.25);white-space:nowrap;
+}
+
+/* ===== BOLETIM PRINT (hidden) ===== */
+#boletimPrintArea{position:absolute;left:-9999px;top:0;width:700px;background:#fff;padding:28px;font-family:'Plus Jakarta Sans',sans-serif}
+
+/* ===== SECTION LABEL ===== */
+.section-label{
+  font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:0.1em;margin-bottom:10px;margin-top:20px;
+  display:flex;align-items:center;gap:8px;
+}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ===== AVATAR COLORS ===== */
+.av-0{background:linear-gradient(135deg,#6366F1,#8B5CF6)}
+.av-1{background:linear-gradient(135deg,#EC4899,#F43F5E)}
+.av-2{background:linear-gradient(135deg,#14B8A6,#06B6D4)}
+.av-3{background:linear-gradient(135deg,#F59E0B,#EF4444)}
+.av-4{background:linear-gradient(135deg,#10B981,#3B82F6)}
+.av-5{background:linear-gradient(135deg,#8B5CF6,#EC4899)}
+
+/* ===== SKELETON ===== */
+.skeleton{background:linear-gradient(90deg,#E2E8F0 25%,#F1F5F9 50%,#E2E8F0 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:8px}
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+.skel-line{height:14px;margin-bottom:8px}
+.skel-card{height:80px;border-radius:var(--radius-sm);margin-bottom:10px}
+
+/* ===== LISTA DISCIPLINAS (NOTAS) ===== */
+.notas-tri-opt{
+  padding:12px 16px;font-size:13px;font-weight:600;color:var(--ink);
+  cursor:pointer;transition:background .15s;
+}
+.notas-tri-opt:hover{background:var(--bg)}
+.notas-tri-opt:not(:last-child){border-bottom:1px solid var(--border)}
+
+.disc-list-card{
+  background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);
+  padding:18px;margin-bottom:10px;cursor:pointer;transition:all .2s;
+}
+.disc-list-card:hover{border-color:var(--primary);box-shadow:var(--shadow)}
+.disc-list-card-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.disc-list-icon{
+  width:32px;height:32px;border-radius:8px;
+  background:var(--primary-light);color:var(--primary);
+  display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;
+}
+.disc-list-nome{font-size:14px;font-weight:800;color:var(--ink);flex:1;letter-spacing:0.01em}
+.disc-list-arrow{
+  width:30px;height:30px;border-radius:50%;
+  border:2px solid var(--primary);color:var(--primary);
+  display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;
+}
+.disc-list-bottom{display:flex;align-items:flex-end;justify-content:space-between}
+.disc-list-faltas-val{font-size:14px;font-weight:700;color:var(--primary)}
+.disc-list-faltas-sub{font-size:12px;color:var(--muted);margin-top:1px}
+.disc-list-notas-val{font-size:28px;font-weight:800;color:var(--primary);line-height:1;text-align:right}
+.disc-list-notas-lbl{font-size:12px;color:var(--muted);text-align:right;margin-top:1px}
+
+/* ===== PÁGINA DISCIPLINA ===== */
+.disc-kpi-card{
+  background:var(--surface);border-radius:var(--radius-sm);border:1px solid var(--border);
+  padding:16px;
+}
+.disc-kpi-header{
+  display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--muted);
+  margin-bottom:10px;
+}
+.disc-kpi-val{font-size:28px;font-weight:800;line-height:1;margin-bottom:8px}
+.disc-kpi-bar-bg{height:5px;background:var(--border);border-radius:10px;overflow:hidden;margin-bottom:5px}
+.disc-kpi-bar-fill{height:100%;border-radius:10px;transition:width .6s ease}
+.disc-kpi-pct{font-size:11px;color:var(--muted);font-weight:600}
+
+.disc-tri-btn{
+  flex:1;padding:11px 4px;border-radius:var(--radius-sm);border:1px solid var(--border);
+  background:var(--surface);font-size:13px;font-weight:700;color:var(--muted);
+  cursor:pointer;transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif;
+}
+.disc-tri-btn.active{background:#2DD4BF;color:#fff;border-color:#2DD4BF;box-shadow:0 4px 12px rgba(45,212,191,0.35)}
+
+.disc-accordion{
+  background:var(--surface);border-radius:var(--radius-sm);border:1px solid var(--border);
+  padding:16px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:border-color .2s;
+}
+.disc-accordion:hover{border-color:var(--primary)}
+.disc-accordion-body{
+  background:var(--surface);border:1px solid var(--border);border-top:none;
+  border-radius:0 0 var(--radius-sm) var(--radius-sm);overflow:hidden;
+}
+.disc-ativ-table{width:100%;border-collapse:collapse}
+.disc-ativ-table th{
+  padding:10px 14px;font-size:11px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:0.06em;text-align:left;
+  border-bottom:1px solid var(--border);background:var(--bg);
+}
+.disc-ativ-table th:last-child{text-align:right}
+.disc-ativ-table td{
+  padding:11px 14px;font-size:13px;color:var(--ink2);border-bottom:1px solid var(--border);
+}
+.disc-ativ-table td:last-child{text-align:right;font-weight:700;color:var(--ink)}
+.disc-ativ-table tr:last-child td{border-bottom:none}
+.disc-ativ-total-row td{
+  padding:11px 14px;font-size:13px;font-weight:700;color:var(--ink);
+  background:var(--bg);
+}
+.disc-faltas-table{width:100%;border-collapse:collapse}
+.disc-faltas-table th{
+  padding:10px 14px;font-size:11px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:0.06em;text-align:left;
+  border-bottom:1px solid var(--border);background:var(--bg);
+}
+.disc-faltas-table td{
+  padding:11px 14px;font-size:13px;color:var(--ink2);border-bottom:1px solid var(--border);
+}
+.disc-faltas-table tr:last-child td{border-bottom:none}
+
+/* ===== DESKTOP ADJUSTMENTS ===== */
+@media(min-width:680px){
+  #content{padding:24px 24px 32px}
+  .nota-pesos{flex-wrap:nowrap}
+  .freq-summary{padding:28px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loadingOverlay">
+  <div class="load-logo">SIALUNO<span></span></div>
+  <div class="load-bar"><div class="load-bar-inner"></div></div>
+  <div class="load-text">Carregando seu painel...</div>
+</div>
+
+<!-- HEADER -->
+<header id="header" style="height:auto;padding:10px 16px 10px;gap:12px">
+  <div class="header-avatar" id="headerAvatar" onclick="showPage('perfil')" style="width:44px;height:44px;font-size:16px;border-radius:50%;flex-shrink:0">?</div>
+  <div class="header-info" style="flex:1;overflow:hidden">
+    <div class="header-nome" id="headerNome" style="font-size:13px;font-weight:800">Carregando...</div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:1px" id="headerSimade">Cód. aluno: —</div>
+    <div class="header-turma" id="headerTurma" style="font-size:11px;margin-top:1px">—</div>
+  </div>
+  <div class="header-notif" id="headerNotif" onclick="showPage('comunicados')">
+    <i class="fas fa-bell"></i>
+    <div class="notif-badge" id="notifBadge" style="display:none">0</div>
+  </div>
+</header>
+
+<!-- CONTENT -->
+<div id="content">
+
+  <!-- ===== COMUNICADOS ===== -->
+  <div class="page active" id="page-comunicados">
+    <div class="page-header">
+      <h2><i class="fas fa-bell" style="color:var(--primary);margin-right:8px"></i>Comunicados</h2>
+      <p>Avisos da escola e da sua turma</p>
+    </div>
+    <div id="comunicadosList">
+      <div class="skel-card skeleton"></div>
+      <div class="skel-card skeleton"></div>
+      <div class="skel-card skeleton"></div>
+    </div>
+  </div>
+
+  <!-- ===== FREQUÊNCIA ===== -->
+  <div class="page" id="page-frequencia">
+    <div class="page-header">
+      <h2><i class="fas fa-calendar-check" style="color:var(--primary);margin-right:8px"></i>Frequência</h2>
+      <p>Presença e faltas por disciplina</p>
+    </div>
+    <!-- Resumo geral -->
+    <div class="freq-resumo">
+      <div class="freq-resumo-card">
+        <div class="freq-resumo-val green" id="freqPct">—</div>
+        <div class="freq-resumo-lbl">Frequência</div>
+      </div>
+      <div class="freq-resumo-card">
+        <div class="freq-resumo-val blue" id="freqPresencas">—</div>
+        <div class="freq-resumo-lbl">Presenças</div>
+      </div>
+      <div class="freq-resumo-card">
+        <div class="freq-resumo-val red" id="freqFaltas">—</div>
+        <div class="freq-resumo-lbl">Faltas</div>
+      </div>
+    </div>
+    <!-- Calendário -->
+    <div class="cal-card">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calMes(-1)"><i class="fas fa-chevron-left"></i></button>
+        <div class="cal-month" id="calMesLabel">—</div>
+        <button class="cal-nav-btn" onclick="calMes(1)"><i class="fas fa-chevron-right"></i></button>
+      </div>
+      <div class="cal-grid" id="calGrid">
+        <div class="cal-dow">D</div><div class="cal-dow">S</div><div class="cal-dow">T</div>
+        <div class="cal-dow">Q</div><div class="cal-dow">Q</div><div class="cal-dow">S</div>
+        <div class="cal-dow">S</div>
+      </div>
+      <div class="cal-legend">
+        <div class="cal-legend-item"><div class="cal-legend-dot presente"></div>Presença</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot falta"></div>Falta</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot aguardando"></div>Aguardando Lançamento</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot hoje"></div>Dia de hoje</div>
+      </div>
+    </div>
+    <!-- Detalhe do dia selecionado -->
+    <div id="calDetalhe"></div>
+  </div>
+
+  <!-- ===== NOTAS ===== -->
+  <div class="page" id="page-notas">
+    <!-- Título + filtro trimestre -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h2 style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-0.02em">DISCIPLINAS</h2>
+      <div style="position:relative">
+        <button id="notasTriFilterBtn" onclick="toggleNotasTriDropdown()" style="display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:8px 14px;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">
+          <span id="notasTriFilterLabel">Todos os trimestres</span>
+          <i class="fas fa-caret-down" style="font-size:11px;color:var(--muted)"></i>
+        </button>
+        <div id="notasTriDropdown" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);z-index:200;min-width:150px;overflow:hidden">
+          <div class="notas-tri-opt" onclick="setNotasTri(0,'Todos os trimestres')">Todos os trimestres</div>
+          <div class="notas-tri-opt" onclick="setNotasTri(1,'1º Trimestre')">1º Trimestre</div>
+          <div class="notas-tri-opt" onclick="setNotasTri(2,'2º Trimestre')">2º Trimestre</div>
+          <div class="notas-tri-opt" onclick="setNotasTri(3,'3º Trimestre')">3º Trimestre</div>
+        </div>
+      </div>
+    </div>
+    <!-- Busca + ordenação -->
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <div style="flex:1;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:25px;padding:10px 14px">
+        <i class="fas fa-search" style="font-size:13px;color:var(--muted)"></i>
+        <input id="notasBusca" type="text" placeholder="Matéria" oninput="renderNotasList()" style="border:none;background:none;font-size:13px;font-weight:500;color:var(--ink);width:100%;outline:none;font-family:'Plus Jakarta Sans',sans-serif">
+      </div>
+      <div style="position:relative">
+        <button id="notasOrdBtn" onclick="toggleNotasOrdDropdown()" style="display:flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--border);border-radius:25px;padding:10px 14px;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap">
+          <span id="notasOrdLabel">Menor nota</span>
+          <i class="fas fa-caret-down" style="font-size:11px;color:var(--muted)"></i>
+        </button>
+        <div id="notasOrdDropdown" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);z-index:200;min-width:140px;overflow:hidden">
+          <div class="notas-tri-opt" onclick="setNotasOrd('menor','Menor nota')">Menor nota</div>
+          <div class="notas-tri-opt" onclick="setNotasOrd('maior','Maior nota')">Maior nota</div>
+          <div class="notas-tri-opt" onclick="setNotasOrd('alfa','Alfabético')">Alfabético</div>
+        </div>
+      </div>
+    </div>
+    <!-- Lista de disciplinas -->
+    <div id="notasDiscList">
+      <div class="skel-card skeleton"></div>
+      <div class="skel-card skeleton"></div>
+      <div class="skel-card skeleton"></div>
+    </div>
+    <button class="btn-boletim" id="btnBoletim" onclick="gerarBoletimPDF()" style="display:none;margin-top:16px">
+      <i class="fas fa-file-pdf"></i> Baixar Boletim em PDF
+    </button>
+  </div>
+
+  <!-- ===== TURMA ===== -->
+  <div class="page" id="page-turma">
+    <div class="page-header">
+      <h2><i class="fas fa-users" style="color:var(--primary);margin-right:8px"></i>Minha Turma</h2>
+      <p>Colegas e informações da turma</p>
+    </div>
+    <div class="turma-hero" id="turmaHero">
+      <div class="turma-hero-icon"><i class="fas fa-chalkboard"></i></div>
+      <div>
+        <div class="turma-hero-nome" id="turmaNome">—</div>
+        <div class="turma-hero-info" id="turmaInfo">—</div>
+      </div>
+    </div>
+    <div class="turma-stats">
+      <div class="turma-stat"><div class="turma-stat-val" id="statAlunos">—</div><div class="turma-stat-lbl">Alunos</div></div>
+      <div class="turma-stat"><div class="turma-stat-val" id="statReps">—</div><div class="turma-stat-lbl">Repres.</div></div>
+      <div class="turma-stat"><div class="turma-stat-val" id="statAulas">—</div><div class="turma-stat-lbl">Aulas</div></div>
+    </div>
+    <div class="section-label">Lista de Alunos</div>
+    <div id="turmaAlunosList">
+      <div class="skel-card skeleton"></div>
+      <div class="skel-card skeleton"></div>
+    </div>
+  </div>
+
+  <!-- ===== PERFIL ===== -->
+  <div class="page" id="page-perfil">
+    <div class="perfil-hero">
+      <div class="perfil-avatar" id="perfilAvatar">?</div>
+      <div class="perfil-nome" id="perfilNome">—</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.65);margin-top:2px;position:relative;z-index:1" id="perfilLogin">—</div>
+      <div class="perfil-chips" id="perfilChips"></div>
+    </div>
+    <div class="section-label">Informações</div>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-card-label"><i class="fas fa-school"></i> Escola</div>
+        <div class="info-card-value" id="infoEscola">—</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-label"><i class="fas fa-chalkboard"></i> Turma</div>
+        <div class="info-card-value" id="infoTurma">—</div>
+        <div class="info-card-sub" id="infoTurno">—</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-label"><i class="fas fa-id-card"></i> Cód. SIMADE</div>
+        <div class="info-card-value" id="infoSimade">—</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-label"><i class="fas fa-graduation-cap"></i> Situação</div>
+        <div class="info-card-value" id="infoSituacao">Ativo</div>
+      </div>
+    </div>
+    <div style="margin-top:24px">
+      <button onclick="handleLogout()" style="width:100%;padding:13px;border:1.5px solid #FEE2E2;background:#FFF5F5;color:#EF4444;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">
+        <i class="fas fa-sign-out-alt"></i> Sair do sistema
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== DISCIPLINA (relatório) ===== -->
+  <div class="page" id="page-disciplina">
+    <!-- Cabeçalho com voltar -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+      <button onclick="voltarDisciplina()" style="width:34px;height:34px;border-radius:10px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink2);font-size:14px;flex-shrink:0">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <h2 style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-0.02em">DISCIPLINAS</h2>
+    </div>
+
+    <!-- Card da disciplina -->
+    <div style="background:var(--surface);border-radius:var(--radius-sm);border:1px solid var(--border);padding:16px;margin-bottom:20px">
+      <div style="font-size:14px;font-weight:800;color:var(--ink);text-transform:uppercase" id="discNome">—</div>
+      <div style="font-size:12px;margin-top:4px">
+        Professor(a): <span style="color:var(--primary);font-weight:700" id="discProfessor">—</span>
+      </div>
+    </div>
+
+    <!-- ANUAL -->
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px">ANUAL</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px">
+      <!-- Notas Anuais -->
+      <div class="disc-kpi-card">
+        <div class="disc-kpi-header"><i class="fas fa-chart-line" style="color:var(--primary)"></i><span>Notas Anuais</span></div>
+        <div class="disc-kpi-val" id="discNotasAnuaisVal" style="color:var(--primary)">—</div>
+        <div class="disc-kpi-bar-bg"><div class="disc-kpi-bar-fill" id="discNotasAnuaisBar" style="width:0%;background:var(--primary)"></div></div>
+        <div class="disc-kpi-pct" id="discNotasAnuaisPct">0,0%</div>
+      </div>
+      <!-- Faltas Anuais -->
+      <div class="disc-kpi-card">
+        <div class="disc-kpi-header"><i class="fas fa-user-group" style="color:var(--muted)"></i><span>Faltas Anuais</span></div>
+        <div class="disc-kpi-val" id="discFaltasAnuaisVal" style="color:#EF4444">—</div>
+        <div class="disc-kpi-bar-bg"><div class="disc-kpi-bar-fill" id="discFaltasAnuaisBar" style="width:0%;background:#EF4444"></div></div>
+        <div class="disc-kpi-pct" id="discFaltasAnuaisPct">0,0%</div>
+      </div>
+    </div>
+
+    <!-- TRIMESTRES -->
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px">TRIMESTRES</div>
+    <div style="display:flex;gap:8px;margin-bottom:18px">
+      <button class="disc-tri-btn active" id="discTriBtn1" onclick="selectDiscTri(1)">1º</button>
+      <button class="disc-tri-btn" id="discTriBtn2" onclick="selectDiscTri(2)">2º</button>
+      <button class="disc-tri-btn" id="discTriBtn3" onclick="selectDiscTri(3)">3º</button>
+      <button class="disc-tri-btn" id="discTriBtnREC" onclick="selectDiscTri('REC')">REC</button>
+    </div>
+
+    <!-- Atividades Avaliativas accordion -->
+    <div class="disc-accordion" id="discAtivAccordion" onclick="toggleDiscAccordion('discAtivBody','discAtivChevron')">
+      <div style="display:flex;align-items:center;flex:1;gap:0">
+        <span style="font-size:14px;font-weight:700;color:var(--ink)">Atividades Avaliativas</span>
+      </div>
+      <span style="font-size:13px;font-weight:800;color:var(--primary)" id="discAtivTotal">0/0</span>
+      <i class="fas fa-chevron-down" id="discAtivChevron" style="font-size:12px;color:var(--muted);margin-left:8px;transition:transform .25s"></i>
+    </div>
+    <div id="discAtivBody" class="disc-accordion-body" style="display:none">
+      <div id="discAtivList"></div>
+    </div>
+
+    <!-- Faltas accordion -->
+    <div class="disc-accordion" id="discFaltasAccordion" onclick="toggleDiscAccordion('discFaltasBody','discFaltasChevron')" style="margin-top:10px">
+      <span style="font-size:14px;font-weight:700;color:var(--ink)">Faltas</span>
+      <span style="font-size:13px;font-weight:800;color:var(--primary);margin-left:auto" id="discFaltasTotal">0/0</span>
+      <i class="fas fa-chevron-down" id="discFaltasChevron" style="font-size:12px;color:var(--muted);margin-left:8px;transition:transform .25s"></i>
+    </div>
+    <div id="discFaltasBody" class="disc-accordion-body" style="display:none">
+      <div id="discFaltasList"></div>
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<!-- BOTTOM NAV -->
+<nav id="bottomNav">
+  <button class="bnav-item active" id="bnav-comunicados" onclick="showPage('comunicados')">
+    <i class="fas fa-bell"></i> Comunicados
+  </button>
+  <button class="bnav-item" id="bnav-frequencia" onclick="showPage('frequencia')">
+    <i class="fas fa-calendar-check"></i> Frequência
+  </button>
+  <button class="bnav-item" id="bnav-notas" onclick="showPage('notas')">
+    <i class="fas fa-star"></i> Notas
+  </button>
+  <button class="bnav-item" id="bnav-turma" onclick="showPage('turma')">
+    <i class="fas fa-users"></i> Turma
+  </button>
+</nav>
+
+<!-- MODAL COMUNICADO -->
+<div class="modal-backdrop" id="comModal" onclick="e=>e.target===this&&closeComModal()">
+  <div class="modal-sheet" id="comModalSheet">
+    <div class="modal-handle"></div>
+    <div class="modal-sheet-header">
+      <div id="comModalTag"></div>
+      <div class="modal-sheet-title" id="comModalTitle">—</div>
+      <div class="modal-sheet-meta" id="comModalMeta"></div>
+    </div>
+    <div class="modal-sheet-body" id="comModalBody">—</div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- BOLETIM PRINT AREA (hidden) -->
+<div id="boletimPrintArea"></div>
+
+<script>
+// ===== CONFIG =====
+const SUPABASE_URL = 'https://biocjxggjjfeqmpuysik.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpb2NqeGdnampmZXFtcHV5c2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxODUwOTQsImV4cCI6MjA4OTc2MTA5NH0.3bL3dKqiWGoHROE6vSzf-7Orp0GLcLpn4mHtUSwC0dU';
+
+// ===== STATE =====
+let currentUser = null;
+let currentAluno = null;
+let currentTurma = null;
+let currentEscola = null;
+let currentAlunos = [];
+let currentNotas = {};
+let currentTri = 1;
+let comunicadosLidos = new Set(JSON.parse(localStorage.getItem('comLidos')||'[]'));
+
+// ===== API =====
+async function api(path, opts={}) {
+  const headers = {'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json',...(opts.headers||{})};
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`,{...opts,headers});
+    const data = await res.json().catch(()=>null);
+    return {data, error: res.ok ? null : data};
+  } catch(e) {
+    return {data:null, error:{message:e.message}};
+  }
+}
+
+// ===== INIT =====
+async function init() {
+  try {
+    const raw = sessionStorage.getItem('ded_user');
+    if (!raw) { window.location.href = 'login.html'; return; }
+    currentUser = JSON.parse(raw);
+    if (currentUser.role !== 'aluno') {
+      window.location.href = 'login.html'; return;
+    }
+
+    await loadAluno();           // 1º: carrega currentAluno (turma_id vem daqui)
+    await loadTurma();            // 2º: carrega currentTurma e currentEscola
+    await Promise.all([loadComunicados(), loadFrequencia(), loadNotas(), loadTurmaAlunos()]);
+    preencherPerfil();
+
+    document.getElementById('loadingOverlay').style.display = 'none';
+  } catch(err) {
+    console.error('[INIT]', err);
+    document.getElementById('loadingOverlay').innerHTML = `
+      <div style="text-align:center;padding:32px">
+        <div style="font-size:28px;margin-bottom:12px">⚠️</div>
+        <div style="font-size:14px;font-weight:700;color:#F87171;margin-bottom:8px">Erro ao carregar</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:20px">${err.message||err}</div>
+        <button onclick="sessionStorage.clear();location.href='login.html'" style="padding:10px 22px;background:#2563EB;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">Voltar ao login</button>
+      </div>`;
+  }
+}
+
+// ===== LOAD ALUNO =====
+async function loadAluno() {
+  if (!currentUser.aluno_id) return;
+  const {data} = await api(`alunos?id=eq.${currentUser.aluno_id}&select=*`);
+  if (data && data.length) {
+    currentAluno = data[0];
+    const nome = currentAluno.nome_completo || currentAluno.nome || currentUser.nome || '?';
+    const initials = nome.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+    document.getElementById('headerAvatar').textContent = initials;
+    document.getElementById('headerNome').textContent = nome;
+    const simade = currentAluno.codigo_simade || '—';
+    document.getElementById('headerSimade').textContent = `Cód. aluno: ${simade}`;
+  }
+}
+
+// ===== LOAD TURMA =====
+async function loadTurma() {
+  // turma_id vem do aluno (carregado em loadAluno)
+  const turmaId = currentAluno?.turma_id;
+  if (!turmaId) return;
+  const {data:turmas} = await api(`turmas?id=eq.${turmaId}&select=*`);
+  if (turmas && turmas.length) {
+    currentTurma = turmas[0];
+    const turmaLabel = [currentTurma.nome, currentTurma.turno].filter(Boolean).join(' · ');
+    document.getElementById('headerTurma').textContent = turmaLabel;
+  }
+  if (currentTurma?.escola_id) {
+    const {data:esc} = await api(`escolas?id=eq.${currentTurma.escola_id}&select=*`);
+    if (esc && esc.length) currentEscola = esc[0];
+  }
+}
+
+// ===== COMUNICADOS =====
+async function loadComunicados() {
+  if (!currentTurma && !currentUser.escola_id) {
+    document.getElementById('comunicadosList').innerHTML = '<div class="empty-state"><i class="fas fa-bell-slash"></i><p>Nenhum comunicado</p><span>Sem turma vinculada</span></div>';
+    return;
+  }
+
+  // Busca: escola toda + turma + individual
+  const filters = [];
+  if (currentEscola?.id || currentUser.escola_id) filters.push(`escola_id=eq.${currentEscola?.id||currentUser.escola_id}&tipo=eq.escola`);
+  if (currentTurma?.id) filters.push(`turma_id=eq.${currentTurma.id}&tipo=eq.turma`);
+  if (currentUser.aluno_id) filters.push(`aluno_id=eq.${currentUser.aluno_id}&tipo=eq.individual`);
+
+  const results = await Promise.all(filters.map(f => api(`comunicados?${f}&order=created_at.desc&limit=30`)));
+  let todos = results.flatMap(r => r.data||[]);
+  todos.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+
+  // Deduplicar
+  const seen = new Set();
+  todos = todos.filter(c => { if(seen.has(c.id)) return false; seen.add(c.id); return true; });
+
+  const naoLidos = todos.filter(c => !comunicadosLidos.has(c.id)).length;
+  const badge = document.getElementById('notifBadge');
+  if (naoLidos > 0) { badge.style.display='flex'; badge.textContent = naoLidos > 9 ? '9+' : naoLidos; }
+  else badge.style.display='none';
+
+  const el = document.getElementById('comunicadosList');
+  if (!todos.length) {
+    el.innerHTML = '<div class="empty-state"><i class="fas fa-bell-slash"></i><p>Nenhum comunicado</p><span>Você está em dia!</span></div>';
+    return;
+  }
+
+  el.innerHTML = todos.map(c => {
+    const lido = comunicadosLidos.has(c.id);
+    const iconMap = {escola:'fa-school',turma:'fa-users',individual:'fa-user'};
+    const data = new Date(c.created_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+    return `<div class="comunicado-card ${lido?'':'unread'}" onclick="openComunicado('${c.id}')">
+      <div class="com-header">
+        <div class="com-icon ${c.tipo}"><i class="fas ${iconMap[c.tipo]||'fa-bell'}"></i></div>
+        <div class="com-title">${escHtml(c.titulo)}</div>
+        <div class="com-date">${data}</div>
+      </div>
+      <div class="com-preview">${escHtml(c.corpo)}</div>
+      <span class="com-tag ${c.tipo}">
+        <i class="fas ${iconMap[c.tipo]||'fa-bell'}"></i>
+        ${c.tipo==='escola'?'Escola toda':c.tipo==='turma'?'Sua turma':'Para você'}
+      </span>
+    </div>`;
+  }).join('');
+
+  window._comunicados = todos;
+}
+
+function openComunicado(id) {
+  const c = (window._comunicados||[]).find(x=>x.id===id);
+  if (!c) return;
+  comunicadosLidos.add(id);
+  localStorage.setItem('comLidos', JSON.stringify([...comunicadosLidos]));
+
+  // Atualizar visual de lido
+  document.querySelectorAll('.comunicado-card').forEach(el => {
+    if(el.onclick?.toString().includes(id)) el.classList.remove('unread');
+  });
+
+  const iconMap = {escola:'fa-school',turma:'fa-users',individual:'fa-user'};
+  const tipo = c.tipo==='escola'?'Escola toda':c.tipo==='turma'?'Sua turma':'Para você';
+  document.getElementById('comModalTag').innerHTML = `<span class="com-tag ${c.tipo}"><i class="fas ${iconMap[c.tipo]}"></i> ${tipo}</span>`;
+  document.getElementById('comModalTitle').textContent = c.titulo;
+  document.getElementById('comModalMeta').innerHTML = `<span style="font-size:12px;color:var(--muted)"><i class="fas fa-clock" style="margin-right:4px"></i>${new Date(c.created_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})}</span>`;
+  document.getElementById('comModalBody').innerHTML = escHtml(c.corpo).replace(/\n/g,'<br>');
+  document.getElementById('comModal').classList.add('open');
+
+  // Atualizar badge
+  const naoLidos = (window._comunicados||[]).filter(x=>!comunicadosLidos.has(x.id)).length;
+  const badge = document.getElementById('notifBadge');
+  if(naoLidos>0){badge.style.display='flex';badge.textContent=naoLidos>9?'9+':naoLidos}
+  else badge.style.display='none';
+}
+
+function closeComModal() { document.getElementById('comModal').classList.remove('open'); }
+document.getElementById('comModal').addEventListener('click', e => { if(e.target===document.getElementById('comModal')) closeComModal(); });
+
+// ===== FREQUÊNCIA =====
+async function loadFrequencia() {
+  if (!currentUser.aluno_id || !currentTurma?.id) {
+    document.getElementById('freqPct').textContent = '—';
+    return;
+  }
+
+  // 1. Todas as aulas da turma
+  const {data:aulas} = await api(`aulas?turma_id=eq.${currentTurma.id}&select=id,data,nome,descricao,professor_id&order=data.asc`);
+  if (!aulas || !aulas.length) { document.getElementById('calGrid').innerHTML='<p style="grid-column:span 7;text-align:center;padding:20px;color:var(--muted);font-size:13px">Nenhuma aula registrada</p>'; return; }
+
+  // 2. Chamadas do aluno
+  const aulaIds = aulas.map(a=>a.id);
+  const {data:chamadas} = await api(`chamadas?aluno_id=eq.${currentUser.aluno_id}&aula_id=in.(${aulaIds.join(',')})&select=aula_id,presente`);
+  const chamadaMap = {};
+  (chamadas||[]).forEach(c => chamadaMap[c.aula_id] = c.presente);
+
+  // 3. Disciplinas via professor_turmas
+  const profIds = [...new Set(aulas.map(a=>a.professor_id).filter(Boolean))];
+  let discPorProf = {}, profNomes = {};
+  if (profIds.length) {
+    const [{data:pt},{data:profs}] = await Promise.all([
+      api(`professor_turmas?turma_id=eq.${currentTurma.id}&professor_id=in.(${profIds.join(',')})&select=professor_id,disciplina`),
+      api(`professores?id=in.(${profIds.join(',')})&select=id,nome`)
+    ]);
+    (pt||[]).forEach(p => discPorProf[p.professor_id] = p.disciplina||'Sem disciplina');
+    (profs||[]).forEach(p => profNomes[p.id] = p.nome);
+  }
+
+  // 4. Agrupar por data: { "2026-03-12": [{aula, status}] }
+  window._calDados = {};
+  aulas.forEach(a => {
+    const d = a.data;
+    if (!window._calDados[d]) window._calDados[d] = [];
+    const status = a.id in chamadaMap ? (chamadaMap[a.id] ? 'presente' : 'falta') : 'aguardando';
+    window._calDados[d].push({
+      aula_id: a.id,
+      disciplina: discPorProf[a.professor_id]||'Sem disciplina',
+      professor: profNomes[a.professor_id]||'—',
+      nome: a.nome||'',
+      descricao: a.descricao||'',
+      status
+    });
+  });
+
+  // 5. Resumo geral
+  let totPresenca=0, totFalta=0, totAguardando=0;
+  Object.values(window._calDados).forEach(aulasDia => {
+    aulasDia.forEach(a => {
+      if(a.status==='presente') totPresenca++;
+      else if(a.status==='falta') totFalta++;
+      else totAguardando++;
+    });
+  });
+  const total = totPresenca + totFalta;
+  const pct = total > 0 ? Math.round((totPresenca/total)*100) : 100;
+  document.getElementById('freqPct').textContent = pct+'%';
+  document.getElementById('freqPresencas').textContent = totPresenca;
+  document.getElementById('freqFaltas').textContent = totFalta;
+
+  // 6. Renderizar calendário no mês atual
+  window._calAno = new Date().getFullYear();
+  window._calMes = new Date().getMonth();
+  renderCalendario();
+  // Atualiza lista de disciplinas na aba Notas (que também usa calDados)
+  renderNotasList();
+}
+
+function calMes(delta) {
+  window._calMes += delta;
+  if (window._calMes > 11) { window._calMes = 0; window._calAno++; }
+  if (window._calMes < 0)  { window._calMes = 11; window._calAno--; }
+  renderCalendario();
+}
+
+function renderCalendario() {
+  const ano = window._calAno, mes = window._calMes;
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  document.getElementById('calMesLabel').textContent = `${meses[mes]} ${ano}`;
+
+  const dados = window._calDados || {};
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const primeiroDia = new Date(ano, mes, 1).getDay(); // 0=dom
+  const diasNoMes = new Date(ano, mes+1, 0).getDate();
+
+  const grid = document.getElementById('calGrid');
+  // Manter cabeçalho
+  const header = '<div class="cal-dow">D</div><div class="cal-dow">S</div><div class="cal-dow">T</div><div class="cal-dow">Q</div><div class="cal-dow">Q</div><div class="cal-dow">S</div><div class="cal-dow">S</div>';
+
+  let cells = '';
+  // Espaços vazios antes do dia 1
+  for (let i=0; i<primeiroDia; i++) cells += '<div class="cal-day empty"></div>';
+
+  for (let d=1; d<=diasNoMes; d++) {
+    const dateStr = `${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dObj = new Date(ano, mes, d);
+    const isHoje = dObj.getTime() === hoje.getTime();
+    const aulasDia = dados[dateStr];
+
+    let cls = '';
+    if (aulasDia && aulasDia.length) {
+      const temFalta = aulasDia.some(a=>a.status==='falta');
+      const temPresente = aulasDia.some(a=>a.status==='presente');
+      const tudoAguardando = aulasDia.every(a=>a.status==='aguardando');
+      if (tudoAguardando) cls = 'aguardando';
+      else if (temFalta && !temPresente) cls = 'falta';
+      else if (temFalta && temPresente) cls = 'falta'; // qualquer falta = vermelho
+      else cls = 'presente';
+    }
+    if (isHoje) cls += ' hoje';
+
+    cells += `<div class="cal-day ${cls}" onclick="selDia('${dateStr}')">${d}</div>`;
+  }
+
+  grid.innerHTML = header + cells;
+
+  // Manter seleção se existir
+  if (window._calDiaSel) {
+    const el = grid.querySelector(`[onclick="selDia('${window._calDiaSel}')"]`);
+    if(el) el.classList.add('selected');
+  }
+}
+
+function selDia(dateStr) {
+  window._calDiaSel = dateStr;
+  // Destacar no grid
+  document.querySelectorAll('.cal-day.selected').forEach(e=>e.classList.remove('selected'));
+  const el = document.querySelector(`[onclick="selDia('${dateStr}')"]`);
+  if(el) el.classList.add('selected');
+
+  const dados = window._calDados || {};
+  const aulasDia = dados[dateStr];
+  const det = document.getElementById('calDetalhe');
+
+  const [ano,mesN,dia] = dateStr.split('-');
+  const dtFmt = `${dia}/${mesN}/${ano}`;
+  const diasSemana = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const diaSemana = diasSemana[new Date(dateStr+'T12:00:00').getDay()];
+
+  if (!aulasDia || !aulasDia.length) {
+    det.innerHTML = `<div class="cal-detail">
+      <div class="cal-detail-header">
+        <div class="cal-detail-date"><i class="fas fa-calendar-day" style="color:var(--primary);margin-right:6px"></i>${diaSemana}, ${dtFmt}</div>
+      </div>
+      <div style="padding:24px;text-align:center;color:var(--muted)">
+        <i class="fas fa-inbox" style="font-size:28px;margin-bottom:10px;display:block;color:var(--border)"></i>
+        <div style="font-size:13px;font-weight:600">Sem aulas registradas</div>
+        <div style="font-size:12px;margin-top:4px">Aguarde ou verifique com o professor</div>
+      </div>
+    </div>`;
+    return;
+  }
+
+  const rows = aulasDia.map((a,i) => `
+    <div class="disc-row" onclick="toggleAulaDetalhe('aula_${i}_${dateStr.replace(/-/g,'')}', this)">
+      <div class="disc-status-dot ${a.status}"></div>
+      <div class="disc-row-info">
+        <div class="disc-row-nome">${escHtml(a.disciplina)}</div>
+        <div class="disc-row-prof">Prof. ${escHtml(a.professor)}</div>
+      </div>
+      <div class="disc-row-status ${a.status}">${a.status==='presente'?'Presente':a.status==='falta'?'Falta':'Aguardando'}</div>
+      <i class="fas fa-chevron-right disc-row-chevron" style="margin-left:6px"></i>
+    </div>
+    <div class="aula-detail" id="aula_${i}_${dateStr.replace(/-/g,'')}" style="display:none">
+      ${a.nome ? `<div class="aula-detail-title">Aula: ${escHtml(a.nome)}</div>` : ''}
+      <div class="aula-detail-desc">${a.descricao ? escHtml(a.descricao) : '<em style="color:var(--muted)">Sem descrição cadastrada</em>'}</div>
+      ${a.status==='aguardando'?`<div style="font-size:12px;color:var(--muted);margin-top:8px;font-style:italic">(Aguardando lançamento de presença)</div>`:''}
+      <button onclick="irParaDisciplina('${escHtml(a.disciplina)}')" class="btn-acessar-disc">
+        <span>ACESSAR DISCIPLINA</span>
+        <i class="fas fa-arrow-right-to-bracket"></i>
+      </button>
+    </div>
+  `).join('');
+
+  det.innerHTML = `<div class="cal-detail">
+    <div class="cal-detail-header">
+      <div class="cal-detail-date"><i class="fas fa-calendar-day" style="color:var(--primary);margin-right:6px"></i>${diaSemana}, ${dtFmt}</div>
+    </div>
+    ${rows}
+  </div>`;
+}
+
+function toggleAulaDetalhe(id, row) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const aberto = el.style.display !== 'none';
+  el.style.display = aberto ? 'none' : 'block';
+  const chev = row.querySelector('.disc-row-chevron');
+  if(chev) chev.className = `fas fa-chevron-${aberto?'right':'down'} disc-row-chevron`;
+}
+
+function irParaDisciplina(disciplinaNome) {
+  // Salva página de origem (frequência ou qualquer outra)
+  const paginaAtiva = document.querySelector('.page.active');
+  if (paginaAtiva) _discPageOrigin = paginaAtiva.id.replace('page-','');
+
+  window._discAtual = disciplinaNome;
+  window._discTriAtual = 1;
+
+  // Preenche nome e professor
+  document.getElementById('discNome').textContent = disciplinaNome;
+
+  // Acha o professor desta disciplina via professor_turmas / calDados
+  let profNome = '—';
+  if (window._calDados) {
+    outer: for (const aulasDia of Object.values(window._calDados)) {
+      for (const a of aulasDia) {
+        if (a.disciplina === disciplinaNome && a.professor && a.professor !== '—') {
+          profNome = a.professor; break outer;
+        }
+      }
+    }
+  }
+  document.getElementById('discProfessor').textContent = profNome.toUpperCase();
+
+  renderDiscPage();
+  showPage('disciplina');
+}
+
+let _discPageOrigin = 'frequencia'; // de onde veio
+function voltarDisciplina() {
+  showPage(_discPageOrigin);
+}
+
+function selectDiscTri(tri) {
+  window._discTriAtual = tri;
+  ['1','2','3','REC'].forEach(t => {
+    const btn = document.getElementById('discTriBtn' + (t==='REC'?'REC':t));
+    if (btn) btn.classList.toggle('active', String(t) === String(tri));
+  });
+  renderDiscTrimestre();
+}
+
+function toggleDiscAccordion(bodyId, chevId) {
+  const body = document.getElementById(bodyId);
+  const chev = document.getElementById(chevId);
+  if (!body) return;
+  const aberto = body.style.display !== 'none';
+  body.style.display = aberto ? 'none' : 'block';
+  if (chev) chev.style.transform = aberto ? '' : 'rotate(180deg)';
+}
+
+function renderDiscPage() {
+  const disc = window._discAtual;
+  const triData = (currentNotas[disc]) || {};
+  const calDados = window._calDados || {};
+
+  // ── ANUAL: notas ──
+  let totalNota = 0, maxNota = 0;
+  [1,2,3].forEach(t => {
+    (triData[t]||[]).forEach(n => {
+      const v = n.valor ?? n.nota;
+      if (v !== null && v !== undefined) totalNota += Number(v);
+      maxNota += Number(n.pontos) || 10;
+    });
+  });
+  const pctNotas = maxNota > 0 ? (totalNota / maxNota) * 100 : 0;
+  document.getElementById('discNotasAnuaisVal').textContent = `${totalNota % 1 === 0 ? totalNota : totalNota.toFixed(1)}/${maxNota % 1 === 0 ? maxNota : maxNota.toFixed(1)}`;
+  document.getElementById('discNotasAnuaisBar').style.width = Math.min(pctNotas,100) + '%';
+  document.getElementById('discNotasAnuaisPct').textContent = pctNotas.toFixed(1).replace('.',',') + '%';
+
+  // ── ANUAL: faltas ──
+  let totalFaltas = 0, totalAulas = 0;
+  Object.values(calDados).forEach(aulasDia => {
+    aulasDia.forEach(a => {
+      if (a.disciplina === disc) {
+        if (a.status === 'falta') totalFaltas++;
+        if (a.status !== 'aguardando') totalAulas++;
+      }
+    });
+  });
+  // Total de aulas lançadas (presente + falta) para o denominador de faltas
+  const denominadorFaltas = Object.values(calDados).reduce((acc, aulasDia) => {
+    return acc + aulasDia.filter(a => a.disciplina === disc && a.status !== 'aguardando').length;
+  }, 0);
+  const pctFaltas = denominadorFaltas > 0 ? (totalFaltas / denominadorFaltas) * 100 : 0;
+  document.getElementById('discFaltasAnuaisVal').textContent = `${totalFaltas}/${denominadorFaltas}`;
+  document.getElementById('discFaltasAnuaisBar').style.width = Math.min(pctFaltas,100) + '%';
+  document.getElementById('discFaltasAnuaisPct').textContent = pctFaltas.toFixed(1).replace('.',',') + '%';
+
+  // Reseta abas para 1º tri
+  selectDiscTri(1);
+}
+
+function renderDiscTrimestre() {
+  const disc = window._discAtual;
+  const tri = window._discTriAtual;
+  const triData = (currentNotas[disc]) || {};
+  const calDados = window._calDados || {};
+
+  // ── Atividades avaliativas ──
+  const notas = (tri === 'REC') ? [] : (triData[tri] || []);
+  let somaNotas = 0, somaPontos = 0;
+  notas.forEach(n => {
+    const v = n.valor ?? n.nota;
+    if (v !== null && v !== undefined) somaNotas += Number(v);
+    somaPontos += Number(n.pontos) || 10;
+  });
+  document.getElementById('discAtivTotal').textContent = `${somaNotas % 1 === 0 ? somaNotas : somaNotas.toFixed(1)}/${somaPontos % 1 === 0 ? somaPontos : somaPontos.toFixed(1)}`;
+
+  const atLista = document.getElementById('discAtivList');
+  if (!notas.length) {
+    atLista.innerHTML = `<div style="padding:24px;text-align:center;color:var(--muted)">
+      <i class="fas fa-clipboard" style="font-size:32px;margin-bottom:10px;display:block;color:var(--border)"></i>
+      <div style="font-size:13px;font-weight:600">Sem notas registradas</div>
+    </div>`;
+  } else {
+    const rows = notas.map(n => {
+      const v = n.valor ?? n.nota;
+      const pts = Number(n.pontos) || 10;
+      const valStr = v !== null && v !== undefined ? `${Number(v).toFixed(1).replace('.',',')}/${pts % 1 === 0 ? pts : pts.toFixed(1)}` : '—';
+      return `<tr>
+        <td style="color:var(--ink2)">${escHtml(n.tipo || 'Nota')}</td>
+        <td style="text-align:right;font-weight:700;color:var(--ink)">${valStr}</td>
+      </tr>`;
+    }).join('');
+    const totalRow = `<tr class="disc-ativ-total-row">
+      <td style="font-weight:700;color:var(--ink)">Total:</td>
+      <td style="text-align:right;font-weight:800;color:var(--primary)">${somaNotas % 1 === 0 ? somaNotas : somaNotas.toFixed(1)}</td>
+    </tr>`;
+    atLista.innerHTML = `<table class="disc-ativ-table">
+      <thead><tr><th>Avaliação</th><th style="text-align:right">Nota</th></tr></thead>
+      <tbody>${rows}${totalRow}</tbody>
+    </table>`;
+  }
+
+  // ── Faltas por trimestre ──
+  // Mapeia trimestre → datas das aulas dessa disciplina com falta
+  const faltasDatas = [];
+  Object.entries(calDados).forEach(([data, aulasDia]) => {
+    aulasDia.forEach(a => {
+      if (a.disciplina === disc && a.status === 'falta') {
+        faltasDatas.push(data);
+      }
+    });
+  });
+  faltasDatas.sort();
+
+  // Para trimestre: filtra por período (trimestre 1=Jan-Abr, 2=Mai-Ago, 3=Set-Dez aproximadamente)
+  // Como não temos as datas exatas dos trimestres, mostra todas as faltas quando tri=REC ou mostra todas
+  // (igual às imagens que mostram tudo no 1º tri também)
+  const faltasExibir = tri === 'REC' ? [] : faltasDatas;
+
+  const faltasTotal = document.getElementById('discFaltasTotal');
+  const faltasLista = document.getElementById('discFaltasList');
+  const faltasPorDia = {};
+  faltasExibir.forEach(d => { faltasPorDia[d] = (faltasPorDia[d]||0)+1; });
+  const diasComFalta = Object.keys(faltasPorDia).sort();
+
+  faltasTotal.textContent = `${faltasExibir.length}/${Object.values(calDados).reduce((acc, aulasDia) => acc + aulasDia.filter(a => a.disciplina === disc && a.status !== 'aguardando').length, 0)}`;
+
+  if (!diasComFalta.length) {
+    faltasLista.innerHTML = `<div style="padding:18px;text-align:center;color:var(--success);font-size:13px;font-weight:700">
+      <i class="fas fa-check-circle" style="margin-right:6px"></i>Sem faltas neste período
+    </div>`;
+  } else {
+    const rows = diasComFalta.map(d => {
+      const [a,m,dia] = d.split('-');
+      return `<tr>
+        <td>${dia}/${m}/${a}</td>
+        <td style="text-align:right;font-weight:700">${faltasPorDia[d]}</td>
+      </tr>`;
+    }).join('');
+    faltasLista.innerHTML = `<table class="disc-faltas-table">
+      <thead><tr><th>Datas</th><th style="text-align:right">Faltas</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+  }
+}
+
+
+// ===== NOTAS =====
+async function loadNotas() {
+  const el = document.getElementById('notasDiscList');
+  if (!currentUser.aluno_id || !currentTurma?.id) {
+    el.innerHTML = '<div class="empty-state"><i class="fas fa-star"></i><p>Sem notas disponíveis</p></div>';
+    return;
+  }
+
+  // 1. Avaliações da turma
+  const {data:avaliacoes} = await api(`avaliacoes?turma_id=eq.${currentTurma.id}&select=id,nome,pontos,trimestre,tipo,professor_id`);
+  // 2. Notas do aluno
+  const {data:notas} = await api(`notas?aluno_id=eq.${currentUser.aluno_id}&select=*`);
+
+  // 3. Disciplinas via professor_turmas
+  const profIds = [...new Set((avaliacoes||[]).map(a=>a.professor_id).filter(Boolean))];
+  let discPorProf = {};
+  if (profIds.length) {
+    const {data:pt} = await api(`professor_turmas?turma_id=eq.${currentTurma.id}&professor_id=in.(${profIds.join(',')})&select=professor_id,disciplina`);
+    (pt||[]).forEach(p => { discPorProf[p.professor_id] = p.disciplina || 'Sem disciplina'; });
+  }
+
+  // 4. Organizar: disciplina > trimestre > notas
+  currentNotas = {};
+  (notas||[]).forEach(n => {
+    const av = (avaliacoes||[]).find(a=>a.id===n.avaliacao_id);
+    if (!av) return;
+    const disc = discPorProf[av.professor_id] || av.tipo || 'Sem disciplina';
+    const tri = av.trimestre || 1;
+    if (!currentNotas[disc]) currentNotas[disc] = {};
+    if (!currentNotas[disc][tri]) currentNotas[disc][tri] = [];
+    // campo real é n.nota (não n.valor)
+    currentNotas[disc][tri].push({
+      ...n,
+      valor: n.nota,
+      tipo: av.nome || av.tipo || '—',
+      pontos: av.pontos || 10
+    });
+  });
+
+  window._avaliacoes = avaliacoes||[];
+  renderNotas();
+}
+
+// ── Estado filtros da lista de notas ──
+let _notasTriFiltro = 0;   // 0=todos, 1/2/3
+let _notasOrd = 'menor';   // menor|maior|alfa
+
+function toggleNotasTriDropdown() {
+  const d = document.getElementById('notasTriDropdown');
+  const o = document.getElementById('notasOrdDropdown');
+  o.style.display = 'none';
+  d.style.display = d.style.display === 'none' ? 'block' : 'none';
+}
+function toggleNotasOrdDropdown() {
+  const d = document.getElementById('notasOrdDropdown');
+  const t = document.getElementById('notasTriDropdown');
+  t.style.display = 'none';
+  d.style.display = d.style.display === 'none' ? 'block' : 'none';
+}
+function setNotasTri(val, label) {
+  _notasTriFiltro = val;
+  document.getElementById('notasTriFilterLabel').textContent = label;
+  document.getElementById('notasTriDropdown').style.display = 'none';
+  renderNotasList();
+}
+function setNotasOrd(val, label) {
+  _notasOrd = val;
+  document.getElementById('notasOrdLabel').textContent = label;
+  document.getElementById('notasOrdDropdown').style.display = 'none';
+  renderNotasList();
+}
+
+// Fechar dropdowns ao clicar fora
+document.addEventListener('click', e => {
+  if (!e.target.closest('#notasTriFilterBtn') && !e.target.closest('#notasTriDropdown'))
+    document.getElementById('notasTriDropdown')?.style && (document.getElementById('notasTriDropdown').style.display='none');
+  if (!e.target.closest('#notasOrdBtn') && !e.target.closest('#notasOrdDropdown'))
+    document.getElementById('notasOrdDropdown')?.style && (document.getElementById('notasOrdDropdown').style.display='none');
+});
+
+function renderNotas() { renderNotasList(); }
+
+function renderNotasList() {
+  const el = document.getElementById('notasDiscList');
+  const btnBoletim = document.getElementById('btnBoletim');
+  const calDados = window._calDados || {};
+  const busca = (document.getElementById('notasBusca')?.value || '').trim().toLowerCase();
+
+  // Coleta TODAS as disciplinas: das notas + do calendário
+  const todasDisc = new Set([
+    ...Object.keys(currentNotas),
+    ...Object.values(calDados).flatMap(aulasDia => aulasDia.map(a => a.disciplina))
+  ]);
+
+  let disciplinas = [...todasDisc].filter(d => d && d !== 'Sem disciplina');
+
+  // Filtro de busca
+  if (busca) disciplinas = disciplinas.filter(d => d.toLowerCase().includes(busca));
+
+  if (!disciplinas.length) {
+    if(btnBoletim) btnBoletim.style.display='none';
+    el.innerHTML='<div class="empty-state"><i class="fas fa-book-open"></i><p>Nenhuma disciplina encontrada</p></div>';
+    return;
+  }
+
+  if(btnBoletim) btnBoletim.style.display='flex';
+
+  // Calcula notas e faltas por disciplina para ordenação e exibição
+  const discData = disciplinas.map(disc => {
+    const triData = currentNotas[disc] || {};
+    // Notas: soma conforme filtro de tri
+    let somaNotas = 0, maxPontos = 0;
+    const tris = _notasTriFiltro === 0 ? [1,2,3] : [_notasTriFiltro];
+    tris.forEach(t => {
+      (triData[t]||[]).forEach(n => {
+        const v = n.valor ?? n.nota;
+        if (v !== null && v !== undefined) somaNotas += Number(v);
+        maxPontos += Number(n.pontos)||10;
+      });
+    });
+    // Faltas: conta do calendário
+    let faltas = 0, totalAulasLanc = 0, totalAulasDisc = 0;
+    Object.values(calDados).forEach(aulasDia => {
+      aulasDia.forEach(a => {
+        if (a.disciplina === disc) {
+          totalAulasDisc++;
+          if (a.status === 'falta') faltas++;
+          if (a.status !== 'aguardando') totalAulasLanc++;
+        }
+      });
+    });
+    return { disc, somaNotas, maxPontos, faltas, totalAulasLanc, totalAulasDisc };
+  });
+
+  // Ordenação
+  if (_notasOrd === 'alfa') {
+    discData.sort((a,b) => a.disc.localeCompare(b.disc, 'pt-BR'));
+  } else if (_notasOrd === 'maior') {
+    discData.sort((a,b) => {
+      const pa = a.maxPontos > 0 ? a.somaNotas/a.maxPontos : 0;
+      const pb = b.maxPontos > 0 ? b.somaNotas/b.maxPontos : 0;
+      return pb - pa;
+    });
+  } else { // menor
+    discData.sort((a,b) => {
+      const pa = a.maxPontos > 0 ? a.somaNotas/a.maxPontos : 0;
+      const pb = b.maxPontos > 0 ? b.somaNotas/b.maxPontos : 0;
+      return pa - pb;
+    });
+  }
+
+  el.innerHTML = discData.map(({ disc, somaNotas, maxPontos, faltas, totalAulasLanc }) => {
+    const notaStr = `${somaNotas % 1 === 0 ? somaNotas : somaNotas.toFixed(1)}/${maxPontos % 1 === 0 ? maxPontos : maxPontos.toFixed(1)}`;
+    const faltaCor = faltas > 0 ? 'color:var(--primary)' : 'color:var(--success)';
+    return `<div class="disc-list-card" onclick="irParaDisciplina('${escHtml(disc)}')">
+      <div class="disc-list-card-top">
+        <div class="disc-list-icon"><i class="fas fa-chart-line"></i></div>
+        <div class="disc-list-nome">${escHtml(disc)}</div>
+        <div class="disc-list-arrow"><i class="fas fa-arrow-right" style="font-size:11px"></i></div>
+      </div>
+      <div class="disc-list-bottom">
+        <div>
+          <div class="disc-list-faltas-val" style="${faltaCor}">${faltas} ${faltas === 1 ? 'falta' : 'faltas'}</div>
+          <div class="disc-list-faltas-sub">de ${totalAulasLanc} aulas</div>
+        </div>
+        <div>
+          <div class="disc-list-notas-val">${notaStr}</div>
+          <div class="disc-list-notas-lbl">Notas</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function mediaTri(notas) {
+  const valid = notas.filter(n=>(n.valor??n.nota)!==null&&(n.valor??n.nota)!==undefined&&!isNaN(Number(n.valor??n.nota)));
+  if (!valid.length) return null;
+  const soma = valid.reduce((s,n)=>s+Number(n.valor??n.nota),0);
+  return soma/valid.length;
+}
+
+function selectTri(tri) { /* legado — não usado */ }
+
+// ===== TURMA =====
+async function loadTurmaAlunos() {
+  if (!currentTurma?.id) {
+    document.getElementById('turmaAlunosList').innerHTML='<div class="empty-state"><i class="fas fa-users"></i><p>Sem turma vinculada</p></div>';
+    return;
+  }
+
+  document.getElementById('turmaNome').textContent = currentTurma.nome||currentTurma.turma||'—';
+  document.getElementById('turmaInfo').textContent = [currentTurma.turno,currentTurma.nivel,currentTurma.ano_letivo].filter(Boolean).join(' · ')||'—';
+
+  const [{data:alunos},{data:aulas},{data:cargos}] = await Promise.all([
+    api(`alunos?turma_id=eq.${currentTurma.id}&order=nome_completo.asc&select=id,nome_completo`),
+    api(`aulas?turma_id=eq.${currentTurma.id}&select=id`),
+    api(`representante_cargos?turma_id=eq.${currentTurma.id}&ativo=eq.true&select=aluno_id,aluno_nome`)
+  ]);
+
+  currentAlunos = alunos||[];
+  const repIds = new Set((cargos||[]).map(c=>c.aluno_id));
+
+  document.getElementById('statAlunos').textContent = currentAlunos.length;
+  document.getElementById('statReps').textContent = (cargos||[]).length;
+  document.getElementById('statAulas').textContent = (aulas||[]).length;
+
+  const el = document.getElementById('turmaAlunosList');
+  if (!currentAlunos.length) {
+    el.innerHTML='<div class="empty-state"><i class="fas fa-users"></i><p>Nenhum aluno cadastrado</p></div>';
+    return;
+  }
+
+  el.innerHTML = currentAlunos.map((a,i)=>{
+    const nome = a.nome_completo||'—';
+    const ini = nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+    const isEu = a.id===currentUser.aluno_id;
+    const isRep = repIds.has(a.id);
+    return `<div class="aluno-list-item">
+      <div class="aluno-num">${i+1}</div>
+      <div class="aluno-av av-${i%6}">${ini}</div>
+      <div class="aluno-item-nome">${escHtml(nome)}</div>
+      ${isRep?'<span class="rep-tag"><i class="fas fa-shield-alt"></i> Rep.</span>':''}
+      ${isEu?'<span class="eu-tag">Você</span>':''}
+    </div>`;
+  }).join('');
+}
+
+// ===== PERFIL =====
+function preencherPerfil() {
+  const nome = currentAluno?.nome_completo||currentUser.nome||'—';
+  const initials = nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  document.getElementById('perfilAvatar').textContent = initials;
+  document.getElementById('perfilNome').textContent = nome;
+  document.getElementById('perfilLogin').textContent = 'Login: ' + (currentUser.login||'—');
+  document.getElementById('infoEscola').textContent = currentEscola?.nome||'—';
+  document.getElementById('infoTurma').textContent = currentTurma?.nome||currentTurma?.turma||'—';
+  document.getElementById('infoTurno').textContent = currentTurma?.turno||'';
+  document.getElementById('infoSimade').textContent = currentAluno?.codigo_simade||'—';
+  document.getElementById('infoSituacao').textContent = currentAluno?.situacao_final||'Ativo';
+
+  const chips = [];
+  if(currentTurma) chips.push(`<div class="perfil-chip"><i class="fas fa-chalkboard"></i>${escHtml(currentTurma.nome||currentTurma.turma||'—')}</div>`);
+  if(currentEscola) chips.push(`<div class="perfil-chip"><i class="fas fa-school"></i>${escHtml(currentEscola.nome||'—')}</div>`);
+  if(currentTurma?.turno) chips.push(`<div class="perfil-chip"><i class="fas fa-clock"></i>${escHtml(currentTurma.turno)}</div>`);
+  document.getElementById('perfilChips').innerHTML = chips.join('');
+}
+
+// ===== BOLETIM PDF =====
+async function gerarBoletimPDF() {
+  const btn = document.getElementById('btnBoletim');
+  btn.disabled=true;
+  btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Gerando PDF...';
+  try {
+    const nome = currentAluno?.nome_completo||currentUser.nome||'Aluno';
+    const pesos={1:30,2:30,3:40};
+    const disciplinas=Object.keys(currentNotas).sort();
+
+    const rows = disciplinas.map(disc=>{
+      const triData=currentNotas[disc];
+      const medias={};
+      [1,2,3].forEach(t=>{medias[t]=triData[t]?mediaTri(triData[t]):null});
+      let mgeral=null;
+      let soma=0,pt=0;
+      [1,2,3].forEach(t=>{if(medias[t]!==null){soma+=medias[t]*(pesos[t]/100);pt+=pesos[t]/100;}});
+      if(pt>0) mgeral=soma/pt;
+      const sit=mgeral===null?'—':mgeral>=6?'Aprovado':mgeral>=4?'Atenção':'Reprovado';
+      const cor=mgeral===null?'#94A3B8':mgeral>=6?'#10B981':mgeral>=4?'#F59E0B':'#EF4444';
+      return `<tr>
+        <td style="padding:10px 14px;border-bottom:1px solid #E2E8F0;font-size:13px;font-weight:600;color:#0F172A">${escHtml(disc)}</td>
+        ${[1,2,3].map(t=>`<td style="padding:10px 14px;border-bottom:1px solid #E2E8F0;text-align:center;font-size:13px;font-weight:700;color:${medias[t]!==null?(medias[t]>=6?'#10B981':medias[t]>=4?'#F59E0B':'#EF4444'):'#94A3B8'}">${medias[t]!==null?medias[t].toFixed(1):'—'}</td>`).join('')}
+        <td style="padding:10px 14px;border-bottom:1px solid #E2E8F0;text-align:center;font-size:14px;font-weight:800;color:${cor}">${mgeral!==null?mgeral.toFixed(1):'—'}</td>
+        <td style="padding:10px 14px;border-bottom:1px solid #E2E8F0;text-align:center;font-size:12px;font-weight:700;color:${cor}">${sit}</td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('boletimPrintArea').innerHTML=`
+      <div style="font-family:'Plus Jakarta Sans',sans-serif;padding:28px">
+        <div style="text-align:center;border-bottom:3px solid #2563EB;padding-bottom:16px;margin-bottom:20px">
+          <div style="font-size:22px;font-weight:800;color:#2563EB;letter-spacing:-0.02em">Minha Vida Escolar</div>
+          <div style="font-size:13px;color:#64748B;margin-top:3px">${escHtml(currentEscola?.nome||'Escola')}</div>
+        </div>
+        <div style="background:#EFF6FF;border-radius:10px;padding:14px 18px;margin-bottom:20px">
+          <div style="font-size:16px;font-weight:800;color:#0F172A">${escHtml(nome)}</div>
+          <div style="font-size:12px;color:#64748B;margin-top:3px">
+            Turma: ${escHtml(currentTurma?.nome||'—')} &nbsp;·&nbsp; ${currentTurma?.turno||''} &nbsp;·&nbsp; Ano Letivo: ${currentTurma?.ano_letivo||new Date().getFullYear()}
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden">
+          <thead>
+            <tr style="background:#1E3A8A">
+              <th style="padding:12px 14px;text-align:left;color:#fff;font-size:12px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase">Disciplina</th>
+              <th style="padding:12px 14px;text-align:center;color:#fff;font-size:12px;font-weight:700">1º Tri<br><span style="font-size:10px;opacity:0.7">30pts</span></th>
+              <th style="padding:12px 14px;text-align:center;color:#fff;font-size:12px;font-weight:700">2º Tri<br><span style="font-size:10px;opacity:0.7">30pts</span></th>
+              <th style="padding:12px 14px;text-align:center;color:#fff;font-size:12px;font-weight:700">3º Tri<br><span style="font-size:10px;opacity:0.7">40pts</span></th>
+              <th style="padding:12px 14px;text-align:center;color:#fff;font-size:12px;font-weight:700">Média</th>
+              <th style="padding:12px 14px;text-align:center;color:#fff;font-size:12px;font-weight:700">Situação</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div style="margin-top:20px;font-size:11px;color:#94A3B8;text-align:right">
+          Gerado em ${new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})} · Minha Vida Escolar
+        </div>
+      </div>`;
+
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const el=document.getElementById('boletimPrintArea');
+    const canvas=await html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#fff'});
+    const img=canvas.toDataURL('image/png');
+    const w=doc.internal.pageSize.getWidth();
+    const h=(canvas.height*w)/canvas.width;
+    doc.addImage(img,'PNG',0,0,w,h);
+    doc.save(`boletim_${nome.replace(/\s+/g,'_').toLowerCase()}.pdf`);
+    showToast('✅ Boletim baixado!');
+  } catch(e) {
+    showToast('❌ Erro ao gerar PDF: '+e.message);
+  } finally {
+    btn.disabled=false;
+    btn.innerHTML='<i class="fas fa-file-pdf"></i> Baixar Boletim em PDF';
+  }
+}
+
+// ===== NAV =====
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active'));
+  const page=document.getElementById('page-'+id);
+  if(page) page.classList.add('active');
+  const bnav=document.getElementById('bnav-'+id);
+  if(bnav) bnav.classList.add('active');
+}
+
+// ===== UTILS =====
+function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function formatDate(d){if(!d)return'—';try{return new Date(d+'T12:00:00').toLocaleDateString('pt-BR')}catch{return d}}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.innerHTML=msg;t.style.display='flex';
+  clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',3000);
+}
+function handleLogout(){
+  sessionStorage.clear();
+  window.location.href='login.html';
+}
+
+// ===== START =====
+init();
+</script>
+
+<!-- ═══════════════════════════════════════════════════
+     PWA — Service Worker + Banner de instalação
+═══════════════════════════════════════════════════ -->
+<div id="pwa-banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:99999;background:#1E293B;color:#fff;border-radius:16px;padding:14px 20px;align-items:center;gap:14px;box-shadow:0 8px 32px rgba(0,0,0,0.35);max-width:340px;width:calc(100% - 32px);">
+  <div style="width:40px;height:40px;background:#6366F1;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <svg width="20" height="20" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" fill="white"/><rect x="9" y="2" width="5" height="5" rx="1" fill="white" opacity="0.6"/><rect x="2" y="9" width="5" height="5" rx="1" fill="white" opacity="0.6"/><rect x="9" y="9" width="5" height="5" rx="1" fill="white"/></svg>
+  </div>
+  <div style="flex:1;min-width:0;">
+    <div style="font-size:13px;font-weight:700;">Instalar SIALUNO</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.6);">Acesse suas notas e frequência offline</div>
+  </div>
+  <div style="display:flex;gap:8px;flex-shrink:0;">
+    <button onclick="pwaInstalar()" style="padding:8px 14px;border-radius:8px;border:none;background:#6366F1;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">Instalar</button>
+    <button onclick="pwaDismiss()" style="padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:none;color:rgba(255,255,255,0.5);font-size:12px;cursor:pointer;">✕</button>
+  </div>
+</div>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('[SW] Registrado:', reg.scope))
+      .catch(err => console.warn('[SW] Falha:', err));
+  });
+}
+
+let _pwaPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _pwaPrompt = e;
+  if (!localStorage.getItem('pwa_dispensado')) {
+    setTimeout(() => {
+      const b = document.getElementById('pwa-banner');
+      if (b) b.style.display = 'flex';
+    }, 3000);
+  }
+});
+
+function pwaInstalar() {
+  if (!_pwaPrompt) return;
+  _pwaPrompt.prompt();
+  _pwaPrompt.userChoice.then(result => {
+    if (result.outcome === 'accepted') pwaDismiss();
+    _pwaPrompt = null;
+  });
+}
+
+function pwaDismiss() {
+  const b = document.getElementById('pwa-banner');
+  if (b) b.style.display = 'none';
+  localStorage.setItem('pwa_dispensado', '1');
+}
+
+window.addEventListener('appinstalled', () => pwaDismiss());
+</script>
+</body>
+</html>
