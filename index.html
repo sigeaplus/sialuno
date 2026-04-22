@@ -3,28 +3,28 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="theme-color" content="#4A2C6E"/>
+  <meta name="theme-color" content="#1D4ED8"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-title" content="SIDED+"/>
-  <link rel="icon" type="image/png" href="sided_logo.png"/>
-  <link rel="apple-touch-icon" href="sided_logo.png"/>
+  <meta name="apple-mobile-web-app-title" content="SIALUNO"/>
+  <link rel="icon" type="image/png" href="sialuno_logo.png"/>
+  <link rel="apple-touch-icon" href="sialuno_logo.png"/>
   <link rel="manifest" href="manifest.json"/>
-  <title>SIDED+ — Portal do Professor</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+  <title>SIALUNO — Portal do Aluno</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --accent:#6C4FD4;--text:#1E1248;--muted:#9A8FC0;
-      --border:#E4DDFF;--bg:#F4F2FF;--card:#fff;
+      --accent:#2563EB;--text:#0F172A;--muted:#64748B;
+      --border:#E2E8F0;--bg:#F0F4FF;--card:#fff;
     }
-    body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+    body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 
     /* NAV */
     nav{
       position:fixed;top:0;left:0;right:0;z-index:100;
       display:flex;align-items:center;justify-content:space-between;
       padding:0 32px;height:60px;
-      background:#4A2C6E;
+      background:#1D4ED8;
       box-shadow:0 2px 12px rgba(0,0,0,0.15);
     }
     .nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
@@ -33,8 +33,8 @@
     .nav-cta{
       padding:8px 20px;background:#fff;
       border:none;border-radius:8px;
-      font-family:'Sora',sans-serif;font-size:13px;font-weight:700;
-      color:#6C4FD4;cursor:pointer;
+      font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;
+      color:#2563EB;cursor:pointer;
       transition:opacity 0.2s,transform 0.1s;
     }
     .nav-cta:hover{opacity:0.9;transform:translateY(-1px)}
@@ -42,7 +42,7 @@
     /* HERO */
     .hero{
       min-height:100vh;
-      background:linear-gradient(135deg,#4A2C6E 0%,#6C4FD4 100%);
+      background:linear-gradient(135deg,#1E3A8A 0%,#2563EB 100%);
       display:flex;flex-direction:column;align-items:center;justify-content:center;
       text-align:center;padding:100px 24px 80px;
       position:relative;overflow:hidden;
@@ -76,8 +76,8 @@
     .btn-hero{
       padding:14px 36px;background:#fff;
       border:none;border-radius:12px;
-      font-family:'Sora',sans-serif;font-size:15px;font-weight:800;
-      color:#6C4FD4;cursor:pointer;
+      font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:800;
+      color:#2563EB;cursor:pointer;
       box-shadow:0 8px 32px rgba(0,0,0,0.2);
       transition:all 0.2s;position:relative;z-index:1;
     }
@@ -94,7 +94,7 @@
       transition:border-color 0.2s,transform 0.2s,box-shadow 0.2s;
       box-shadow:0 2px 8px rgba(0,0,0,0.05);
     }
-    .feat-card:hover{border-color:#6C4FD4;transform:translateY(-4px);box-shadow:0 8px 24px rgba(108,79,212,0.12)}
+    .feat-card:hover{border-color:#2563EB;transform:translateY(-4px);box-shadow:0 8px 24px rgba(37,99,235,0.12)}
     .feat-icon{font-size:28px;margin-bottom:12px}
     .feat-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:5px}
     .feat-desc{font-size:13px;color:var(--muted);line-height:1.6}
@@ -102,7 +102,7 @@
     /* OVERLAY LOGIN */
     .overlay{
       display:none;position:fixed;inset:0;z-index:200;
-      background:rgba(74,44,110,0.96);
+      background:rgba(15,23,42,0.96);
       backdrop-filter:blur(14px);
       align-items:center;justify-content:center;padding:20px;
     }
@@ -110,7 +110,7 @@
     .login-card{
       width:100%;max-width:400px;
       background:#fff;
-      border:1.5px solid #E4DDFF;
+      border:1.5px solid #E2E8F0;
       border-radius:20px;padding:40px 36px;
       position:relative;animation:popIn 0.3s ease;
     }
@@ -123,25 +123,25 @@
     .lcard-logo-sub{font-size:11px;color:var(--muted)}
     .lcard-title{font-size:19px;font-weight:700;color:var(--text);margin-bottom:3px}
     .lcard-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
-    .form-label{display:block;font-size:11px;font-weight:700;color:#6C4FD4;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px}
+    .form-label{display:block;font-size:11px;font-weight:700;color:#2563EB;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px}
     .form-input{
       width:100%;padding:11px 13px;
       background:var(--bg);border:1.5px solid var(--border);
-      border-radius:9px;font-family:'Sora',sans-serif;font-size:14px;
+      border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;
       color:var(--text);outline:none;
       transition:border-color 0.2s,box-shadow 0.2s;
     }
-    .form-input:focus{border-color:#6C4FD4;box-shadow:0 0 0 3px rgba(108,79,212,0.12)}
+    .form-input:focus{border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,0.12)}
     .form-input::placeholder{color:var(--muted)}
     .form-group{margin-bottom:14px}
     .input-wrap{position:relative}
     .eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);display:flex;align-items:center}
     .btn-login{
       width:100%;padding:13px;margin-top:6px;
-      background:#6C4FD4;border:none;border-radius:9px;
-      font-family:'Sora',sans-serif;font-size:14px;font-weight:700;
+      background:#2563EB;border:none;border-radius:9px;
+      font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;
       color:#fff;cursor:pointer;
-      box-shadow:0 4px 16px rgba(108,79,212,0.3);
+      box-shadow:0 4px 16px rgba(37,99,235,0.3);
       display:flex;align-items:center;justify-content:center;gap:8px;
       transition:opacity 0.2s,transform 0.1s;
     }
@@ -154,11 +154,11 @@
     .btn-google{
       width:100%;padding:11px;background:var(--bg);
       border:1.5px solid var(--border);border-radius:9px;
-      font-family:'Sora',sans-serif;font-size:13px;font-weight:600;color:var(--text);
+      font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;color:var(--text);
       cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;
       transition:background 0.2s,border-color 0.2s;
     }
-    .btn-google:hover{background:var(--card);border-color:#6C4FD4}
+    .btn-google:hover{background:var(--card);border-color:#2563EB}
     .btn-google svg{width:18px;height:18px}
     .error-msg{
       display:none;background:rgba(239,68,68,0.08);
@@ -175,45 +175,45 @@
 
 <nav>
   <a class="nav-brand" href="#">
-    <img src="sided_logo.png" alt="SIDED+"/>
-    <span>SIDED+</span>
+    <img src="sialuno_logo.png" alt="SIALUNO"/>
+    <span>SIALUNO</span>
   </a>
   <button class="nav-cta" onclick="abrirLogin()">Acessar</button>
 </nav>
 
 <section class="hero">
-  <div class="badge"><span class="badge-dot"></span>Professor & Diretor</div>
-  <h1>Seu diário,<br/><span>sua turma.</span></h1>
-  <p>Chamadas, notas e planejamentos em um só lugar — rápido, simples e de qualquer dispositivo.</p>
+  <div class="badge"><span class="badge-dot"></span>Área do Estudante</div>
+  <h1>Sua escola,<br/><span>no seu bolso.</span></h1>
+  <p>Notas, frequência, horários e avisos — tudo que você precisa saber sobre sua vida escolar.</p>
   <button class="btn-hero" onclick="abrirLogin()">Entrar no sistema →</button>
 </section>
 
 <div class="features"><div class="feat-card">
-      <div class="feat-icon">📋</div>
-      <div class="feat-title">Chamada</div>
-      <div class="feat-desc">Registro de frequência em segundos.</div>
-    </div><div class="feat-card">
-      <div class="feat-icon">📊</div>
-      <div class="feat-title">Notas</div>
-      <div class="feat-desc">Lançamento e médias automáticas.</div>
+      <div class="feat-icon">📚</div>
+      <div class="feat-title">Minhas Notas</div>
+      <div class="feat-desc">Veja avaliações e médias em tempo real.</div>
     </div><div class="feat-card">
       <div class="feat-icon">📅</div>
-      <div class="feat-title">Planejamento</div>
-      <div class="feat-desc">Grade e cronograma organizados.</div>
+      <div class="feat-title">Horários</div>
+      <div class="feat-desc">Grade de aulas e calendário escolar.</div>
     </div><div class="feat-card">
-      <div class="feat-icon">💬</div>
-      <div class="feat-title">Comunicados</div>
-      <div class="feat-desc">Avisos diretos para alunos.</div>
+      <div class="feat-icon">🔔</div>
+      <div class="feat-title">Avisos</div>
+      <div class="feat-desc">Comunicados da escola e professores.</div>
+    </div><div class="feat-card">
+      <div class="feat-icon">📈</div>
+      <div class="feat-title">Frequência</div>
+      <div class="feat-desc">Histórico de presença e faltas.</div>
     </div></div>
 
 <div class="overlay" id="overlay">
   <div class="login-card">
     <button class="close-btn" onclick="fecharLogin()">✕</button>
     <div class="lcard-logo">
-      <img src="sided_logo.png" alt="SIDED+"/>
+      <img src="sialuno_logo.png" alt="SIALUNO"/>
       <div>
-        <div class="lcard-logo-name">SIDED+</div>
-        <div class="lcard-logo-sub">Diário Escolar Digital</div>
+        <div class="lcard-logo-name">SIALUNO</div>
+        <div class="lcard-logo-sub">Minha Vida Escolar</div>
       </div>
     </div>
     <div class="lcard-title">Bem-vindo de volta</div>
@@ -244,7 +244,7 @@
 </div>
 
 <script>
-  const SB_URL='https://biocjxggjjfeqmpuysik.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpb2NqeGdnampmZXFtcHV5c2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxODUwOTQsImV4cCI6MjA4OTc2MTA5NH0.3bL3dKqiWGoHROE6vSzf-7Orp0GLcLpn4mHtUSwC0dU',DASH='professor_dashboard.html';
+  const SB_URL='https://biocjxggjjfeqmpuysik.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpb2NqeGdnampmZXFtcHV5c2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxODUwOTQsImV4cCI6MjA4OTc2MTA5NH0.3bL3dKqiWGoHROE6vSzf-7Orp0GLcLpn4mHtUSwC0dU',DASH='aluno_dashboard.html';
   function abrirLogin(){document.getElementById('overlay').classList.add('active');setTimeout(()=>document.getElementById('inp-login').focus(),100)}
   function fecharLogin(){document.getElementById('overlay').classList.remove('active')}
   document.getElementById('overlay').addEventListener('click',e=>{if(e.target===document.getElementById('overlay'))fecharLogin()});
