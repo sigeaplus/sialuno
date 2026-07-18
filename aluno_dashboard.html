@@ -1120,7 +1120,7 @@ async function loadFrequencia() {
   }
 
   // 1. Todas as aulas da turma
-  const {data:aulas} = await api(`aulas?turma_id=eq.${currentTurma.id}&select=id,data,nome,descricao,professor_id&order=data.asc`);
+  const {data:aulas} = await api(`aulas?turma_id=eq.${currentTurma.id}&select=id,data,nome,descricao,professor_id,turma_disciplina_id&order=data.asc`);
   if (!aulas || !aulas.length) { document.getElementById('calGrid').innerHTML='<p style="grid-column:span 7;text-align:center;padding:20px;color:var(--muted);font-size:13px">Nenhuma aula registrada</p>'; return; }
 
   // 2. Chamadas do aluno
@@ -1129,15 +1129,17 @@ async function loadFrequencia() {
   const chamadaMap = {};
   (chamadas||[]).forEach(c => chamadaMap[c.aula_id] = c.presente);
 
-  // 3. Disciplinas via professor_turmas
+  // 3. Disciplina real de cada aula: via turma_disciplina_id (histórico correto,
+  //    grava a disciplina no momento da aula), não via professor_turmas (estado atual do professor)
   const profIds = [...new Set(aulas.map(a=>a.professor_id).filter(Boolean))];
-  let discPorProf = {}, profNomes = {};
-  if (profIds.length) {
-    const [{data:pt},{data:profs}] = await Promise.all([
-      api(`professor_turmas?turma_id=eq.${currentTurma.id}&professor_id=in.(${profIds.join(',')})&select=professor_id,disciplina`),
-      api(`professores?id=in.(${profIds.join(',')})&select=id,nome`)
+  const tdIds = [...new Set(aulas.map(a=>a.turma_disciplina_id).filter(Boolean))];
+  let discPorTd = {}, profNomes = {};
+  {
+    const [{data:tds},{data:profs}] = await Promise.all([
+      tdIds.length ? api(`turma_disciplinas?id=in.(${tdIds.join(',')})&select=id,disciplinas(nome)`) : Promise.resolve({data:[]}),
+      profIds.length ? api(`professores?id=in.(${profIds.join(',')})&select=id,nome`) : Promise.resolve({data:[]})
     ]);
-    (pt||[]).forEach(p => discPorProf[p.professor_id] = p.disciplina||'Sem disciplina');
+    (tds||[]).forEach(td => discPorTd[td.id] = td.disciplinas?.nome||'Sem disciplina');
     (profs||[]).forEach(p => profNomes[p.id] = p.nome);
   }
 
@@ -1149,7 +1151,7 @@ async function loadFrequencia() {
     const status = a.id in chamadaMap ? (chamadaMap[a.id] ? 'presente' : 'falta') : 'aguardando';
     window._calDados[d].push({
       aula_id: a.id,
-      disciplina: discPorProf[a.professor_id]||'Sem disciplina',
+      disciplina: discPorTd[a.turma_disciplina_id]||'Sem disciplina',
       professor: profNomes[a.professor_id]||'—',
       nome: a.nome||'',
       descricao: a.descricao||'',
@@ -1492,16 +1494,17 @@ async function loadNotas() {
   }
 
   // 1. Avaliações da turma
-  const {data:avaliacoes} = await api(`avaliacoes?turma_id=eq.${currentTurma.id}&select=id,nome,pontos,trimestre,tipo,professor_id`);
+  const {data:avaliacoes} = await api(`avaliacoes?turma_id=eq.${currentTurma.id}&select=id,nome,pontos,trimestre,tipo,professor_id,turma_disciplina_id`);
   // 2. Notas do aluno
   const {data:notas} = await api(`notas?aluno_id=eq.${currentUser.aluno_id}&select=*`);
 
-  // 3. Disciplinas via professor_turmas
-  const profIds = [...new Set((avaliacoes||[]).map(a=>a.professor_id).filter(Boolean))];
-  let discPorProf = {};
-  if (profIds.length) {
-    const {data:pt} = await api(`professor_turmas?turma_id=eq.${currentTurma.id}&professor_id=in.(${profIds.join(',')})&select=professor_id,disciplina`);
-    (pt||[]).forEach(p => { discPorProf[p.professor_id] = p.disciplina || 'Sem disciplina'; });
+  // 3. Disciplina real de cada avaliação: via turma_disciplina_id (histórico correto),
+  //    não via professor_turmas (que reflete só o professor ATUAL e reescreve o passado)
+  const tdIds = [...new Set((avaliacoes||[]).map(a=>a.turma_disciplina_id).filter(Boolean))];
+  let discPorTd = {};
+  if (tdIds.length) {
+    const {data:tds} = await api(`turma_disciplinas?id=in.(${tdIds.join(',')})&select=id,disciplinas(nome)`);
+    (tds||[]).forEach(td => { discPorTd[td.id] = td.disciplinas?.nome || 'Sem disciplina'; });
   }
 
   // 4. Organizar: disciplina > trimestre > notas
@@ -1509,7 +1512,7 @@ async function loadNotas() {
   (notas||[]).forEach(n => {
     const av = (avaliacoes||[]).find(a=>a.id===n.avaliacao_id);
     if (!av) return;
-    const disc = discPorProf[av.professor_id] || av.tipo || 'Sem disciplina';
+    const disc = discPorTd[av.turma_disciplina_id] || av.tipo || 'Sem disciplina';
     const tri = av.trimestre || 1;
     if (!currentNotas[disc]) currentNotas[disc] = {};
     if (!currentNotas[disc][tri]) currentNotas[disc][tri] = [];
