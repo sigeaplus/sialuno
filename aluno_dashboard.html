@@ -1129,18 +1129,17 @@ async function loadFrequencia() {
   const chamadaMap = {};
   (chamadas||[]).forEach(c => chamadaMap[c.aula_id] = c.presente);
 
-  // 3. Disciplina real de cada aula: via turma_disciplina_id (histórico correto,
-  //    grava a disciplina no momento da aula), não via professor_turmas (estado atual do professor)
-  const profIds = [...new Set(aulas.map(a=>a.professor_id).filter(Boolean))];
+  // 3. Disciplina e professor ATUAL de cada aula: via turma_disciplina_id.
+  //    Mostra sempre o professor vigente hoje na disciplina (turma_disciplinas.professor_id),
+  //    não quem operou o lançamento da aula (aulas.professor_id pode ser um professor antigo/substituto).
   const tdIds = [...new Set(aulas.map(a=>a.turma_disciplina_id).filter(Boolean))];
-  let discPorTd = {}, profNomes = {};
-  {
-    const [{data:tds},{data:profs}] = await Promise.all([
-      tdIds.length ? api(`turma_disciplinas?id=in.(${tdIds.join(',')})&select=id,disciplinas(nome)`) : Promise.resolve({data:[]}),
-      profIds.length ? api(`professores?id=in.(${profIds.join(',')})&select=id,nome`) : Promise.resolve({data:[]})
-    ]);
-    (tds||[]).forEach(td => discPorTd[td.id] = td.disciplinas?.nome||'Sem disciplina');
-    (profs||[]).forEach(p => profNomes[p.id] = p.nome);
+  let discPorTd = {}, profNomePorTd = {};
+  if (tdIds.length) {
+    const {data:tds} = await api(`turma_disciplinas?id=in.(${tdIds.join(',')})&select=id,disciplinas(nome),professores(nome)`);
+    (tds||[]).forEach(td => {
+      discPorTd[td.id] = td.disciplinas?.nome || 'Sem disciplina';
+      profNomePorTd[td.id] = td.professores?.nome || '—';
+    });
   }
 
   // 4. Agrupar por data: { "2026-03-12": [{aula, status}] }
@@ -1152,7 +1151,7 @@ async function loadFrequencia() {
     window._calDados[d].push({
       aula_id: a.id,
       disciplina: discPorTd[a.turma_disciplina_id]||'Sem disciplina',
-      professor: profNomes[a.professor_id]||'—',
+      professor: profNomePorTd[a.turma_disciplina_id]||'—',
       nome: a.nome||'',
       descricao: a.descricao||'',
       status
@@ -1316,7 +1315,7 @@ function irParaDisciplina(disciplinaNome) {
   // Preenche nome e professor
   document.getElementById('discNome').textContent = disciplinaNome;
 
-  // Acha o professor desta disciplina via professor_turmas / calDados
+  // Professor atual da disciplina (já vem de turma_disciplinas via calDados)
   let profNome = '—';
   if (window._calDados) {
     outer: for (const aulasDia of Object.values(window._calDados)) {
@@ -1498,8 +1497,7 @@ async function loadNotas() {
   // 2. Notas do aluno
   const {data:notas} = await api(`notas?aluno_id=eq.${currentUser.aluno_id}&select=*`);
 
-  // 3. Disciplina real de cada avaliação: via turma_disciplina_id (histórico correto),
-  //    não via professor_turmas (que reflete só o professor ATUAL e reescreve o passado)
+  // 3. Disciplina de cada avaliação: via turma_disciplina_id (fixo, não muda com troca de professor)
   const tdIds = [...new Set((avaliacoes||[]).map(a=>a.turma_disciplina_id).filter(Boolean))];
   let discPorTd = {};
   if (tdIds.length) {
